@@ -204,3 +204,43 @@ html[data-keyboard-open] .pb-safe {
     display: none !important;
   }
 }
+
+/* Rendering of Office documents inside the protected viewer */
+.sheet-view table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.sheet-view td,
+.sheet-view th {
+  border: 1px solid hsl(var(--border, 0 0% 88%));
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+.sheet-view tr:first-child td {
+  font-weight: 600;
+  background: color-mix(in oklab, currentColor 6%, transparent);
+}
+.doc-view h1,
+.doc-view h2,
+.doc-view h3 {
+  font-weight: 700;
+  margin: 0.8em 0 0.4em;
+}
+.doc-view p {
+  margin: 0.5em 0;
+}
+.doc-view ul,
+.doc-view ol {
+  margin: 0.5em 1.4em;
+  list-style: revert;
+}
+.doc-view table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.doc-view td,
+.doc-view th {
+  border: 1px solid hsl(var(--border, 0 0% 88%));
+  padding: 6px 10px;
+}
