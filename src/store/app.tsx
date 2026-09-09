@@ -190,6 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         readsRes,
         auditRes,
         invitesRes,
+        settingsRes,
       ] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at"),
         supabase.from("user_roles").select("user_id, role"),
@@ -199,6 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         supabase.from("message_reads").select("message_id, user_id"),
         supabase.from("audit_events").select("*").order("at", { ascending: false }).limit(500),
         supabase.from("invites").select("*").order("created_at", { ascending: false }),
+        supabase.from("org_settings").select("allowed_domains").limit(1).maybeSingle(),
       ]);
 
       const roleByUser = new Map<string, "admin" | "manager">();
