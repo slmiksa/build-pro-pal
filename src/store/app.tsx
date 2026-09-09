@@ -735,6 +735,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [users, log, refresh],
   );
 
+  const setAllowedDomains = useCallback<Ctx["setAllowedDomains"]>(
+    async (domains) => {
+      const clean = Array.from(
+        new Set(
+          domains
+            .map((d) => d.trim().toLowerCase().replace(/^@+/, ""))
+            .filter(Boolean),
+        ),
+      );
+      const { data: row } = await supabase
+        .from("org_settings")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+      const { error } = row
+        ? await supabase
+            .from("org_settings")
+            .update({ allowed_domains: clean })
+            .eq("id", row.id)
+        : await supabase
+            .from("org_settings")
+            .insert({ allowed_domains: clean });
+      if (error) return error.message;
+      setAllowedDomainsState(clean);
+      return null;
+    },
+    [],
+  );
+
   const createInvite = useCallback<Ctx["createInvite"]>(
     async (email) => {
       if (!currentUserId) return null;
