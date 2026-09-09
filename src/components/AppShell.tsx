@@ -116,7 +116,7 @@ export function AppShell({
         </main>
 
         {!hideTabs && (
-          <nav className="shrink-0 bg-background px-4 pt-1.5 pb-0">
+          <nav className="pb-safe shrink-0 bg-background px-4 pt-1.5">
             <div className="grid grid-cols-3 rounded-[24px] bg-surface-2/90 p-1">
               {tabs.map((t) => (
                 <Link
