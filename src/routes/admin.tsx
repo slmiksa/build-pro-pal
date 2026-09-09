@@ -30,15 +30,24 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const { users, invites, addMember, toggleMemberDisabled, createInvite } =
-    useApp();
+  const {
+    users,
+    invites,
+    isAdmin,
+    addMember,
+    toggleMemberDisabled,
+    createInvite,
+    resetMemberPassword,
+  } = useApp();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     if (!name.trim() || !email.trim()) {
       toast.error("الاسم والبريد مطلوبان");
       return;
@@ -47,21 +56,44 @@ function AdminPage() {
       toast.error(`يجب أن يكون البريد على نطاق @${COMPANY_DOMAIN}`);
       return;
     }
-    addMember({ name: name.trim(), email: email.trim(), title: title.trim() || "مدير" });
-    toast.success("تمت إضافة العضو");
+    setBusy(true);
+    const res = await addMember({
+      name: name.trim(),
+      email: email.trim(),
+      title: title.trim() || "مدير",
+    });
+    setBusy(false);
+    if (res.error) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success("تمت إضافة العضو", {
+      description: `كلمة المرور المؤقتة: ${res.password}`,
+      duration: 15000,
+    });
     setName("");
     setEmail("");
     setTitle("");
   };
 
-  const makeInvite = () => {
+  const makeInvite = async () => {
     if (!inviteEmail.trim().endsWith(`@${COMPANY_DOMAIN}`)) {
       toast.error(`الدعوات مقيدة بنطاق @${COMPANY_DOMAIN}`);
       return;
     }
-    const inv = createInvite(inviteEmail.trim());
+    const inv = await createInvite(inviteEmail.trim());
+    if (!inv) {
+      toast.error("تعذّر إنشاء رابط الدعوة");
+      return;
+    }
     setInviteEmail("");
     toast.success("تم إنشاء رابط الدعوة", { description: inv.code });
+  };
+
+  const sendReset = async (memberEmail: string) => {
+    const error = await resetMemberPassword(memberEmail);
+    if (error) toast.error("تعذّر إرسال الرابط");
+    else toast.success("أُرسل رابط إعادة تعيين كلمة المرور");
   };
 
   const copyLink = (code: string) => {
@@ -75,10 +107,12 @@ function AdminPage() {
       <div className="mx-auto w-full min-w-0 max-w-5xl space-y-6">
         <div>
           <p className="text-sm text-muted-foreground">
-            لا يوجد تسجيل ذاتي — الوصول بحساب تنشئه أنت أو برابط دعوة تنتهي
-            صلاحيته.
+            {isAdmin
+              ? "لا يوجد تسجيل ذاتي — الوصول بحساب تنشئه أنت أو برابط دعوة تنتهي صلاحيته."
+              : "العرض فقط — إضافة الأعضاء والدعوات متاحة لمسؤول النظام."}
           </p>
         </div>
+
 
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <div className="min-w-0 overflow-hidden rounded-2xl border border-border bg-surface">
@@ -122,7 +156,7 @@ function AdminPage() {
                     variant="secondary"
                     size="sm"
                     className="min-w-0 rounded-xl shadow-none"
-                    onClick={() => toast.success("أُرسل رابط إعادة تعيين كلمة المرور")}
+                    onClick={() => void sendReset(u.email)}
                   >
                     <KeyRound className="size-3.5" />
                     <span className="truncate">كلمة المرور</span>

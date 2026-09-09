@@ -72,8 +72,8 @@ export function AppShell({
                     type="button"
                     aria-label="خروج"
                     className="grid size-10 place-items-center rounded-full bg-surface-2 text-foreground transition-transform active:scale-95"
-                    onClick={() => {
-                      signOut();
+                    onClick={async () => {
+                      await signOut();
                       navigate({ to: "/", replace: true });
                     }}
                   >
