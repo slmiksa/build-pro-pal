@@ -15,8 +15,12 @@ export function ProtectedViewer({
   message: Message;
   onClose: () => void;
 }) {
-  const { currentUser, log } = useApp();
+  const { currentUser, log, fetchAttachment } = useApp();
   const [attempts, setAttempts] = useState(0);
+  const [blob, setBlob] = useState<Blob | null>(null);
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const [textBody, setTextBody] = useState<string | null>(null);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const att = message.attachment;
   const policy = message.policy;
 
