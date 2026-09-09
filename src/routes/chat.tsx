@@ -676,9 +676,29 @@ function NewChatDialog({
                 onClick={() => void onSubmitGroup()}
               >
                 إنشاء المجموعة
+            </TabsContent>
+
+            <TabsContent value="invite" className="space-y-3 pt-3">
+              <p className="text-xs text-muted-foreground">
+                أنشئ رابط دعوة صالحاً 48 ساعة وأرسله لمن تريد انضمامه.
+              </p>
+              <Input
+                type="email"
+                dir="ltr"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="name@company.com"
+                className="h-11 text-start"
+              />
+              <Button
+                className="w-full"
+                disabled={busy}
+                onClick={() => void onSubmitInvite()}
+              >
+                إنشاء رابط الدعوة ونسخه
               </Button>
             </TabsContent>
-          )}
+
         </Tabs>
       </DialogContent>
     </Dialog>
