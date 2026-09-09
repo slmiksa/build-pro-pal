@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { LogOut, MessagesSquare, ScrollText, Users } from "lucide-react";
+import { Download, LogOut, MessagesSquare, ScrollText, Users } from "lucide-react";
+import { InstallAppDialog } from "@/components/InstallApp";
 import { useAppHeight } from "@/hooks/use-app-height";
 import { initials } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,17 @@ export function AppShell({
               </div>
               {showProfile && (
                 <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-surface-2/80 p-1">
+                  <InstallAppDialog
+                    trigger={
+                      <button
+                        type="button"
+                        aria-label="تثبيت التطبيق"
+                        className="grid size-8 place-items-center rounded-full text-muted-foreground transition-all hover:bg-background hover:text-foreground active:scale-95"
+                      >
+                        <Download className="size-[17px]" />
+                      </button>
+                    }
+                  />
                   <span
                     className="flex size-8 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground"
                     style={{ backgroundColor: currentUser.color }}

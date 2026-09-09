@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Droplets, ScanEye, ShieldCheck, Timer } from "lucide-react";
+import { ArrowRight, Download, Droplets, ScanEye, ShieldCheck, Timer } from "lucide-react";
 import { toast } from "sonner";
+import { InstallAppDialog } from "@/components/InstallApp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -153,6 +154,16 @@ function LoginPage() {
               >
                 إنشاء حساب جديد
               </Button>
+              <InstallAppDialog
+                trigger={
+                  <Button
+                    variant="ghost"
+                    className="h-12 w-full rounded-2xl text-sm font-semibold text-muted-foreground"
+                  >
+                    <Download className="size-4" /> تثبيت التطبيق على الجوال
+                  </Button>
+                }
+              />
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-4 rounded-3xl bg-surface-2 p-5">
