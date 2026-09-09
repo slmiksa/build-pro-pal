@@ -38,11 +38,13 @@ function ChatPage() {
   const {
     conversations,
     messages,
+    users,
     currentUserId,
     conversationTitle,
     userById,
     markRead,
     registerOpen,
+    startDirect,
     log,
   } = useApp();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -106,12 +108,21 @@ function ChatPage() {
     conversationTitle(c).includes(query.trim()),
   );
 
-  const openAttachment = (m: Message) => {
-    if (registerOpen(m.id) === "limit") {
+  const openAttachment = async (m: Message) => {
+    if ((await registerOpen(m.id)) === "limit") {
       toast.error("انتهى عدد مرات الفتح المسموحة لهذا الملف");
       return;
     }
     setViewing(m);
+  };
+
+  const beginChat = async (userId: string) => {
+    const id = await startDirect(userId);
+    if (!id) {
+      toast.error("تعذّر بدء المحادثة");
+      return;
+    }
+    setActiveId(id);
   };
 
   /* ---------- Conversation list ---------- */
@@ -137,9 +148,43 @@ function ChatPage() {
         <div className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
           {list.length === 0 && (
             <p className="pt-12 text-center text-sm text-muted-foreground">
-              لا توجد محادثة بهذا الاسم.
+              {query.trim() ? "لا توجد محادثة بهذا الاسم." : "لا توجد محادثات بعد."}
             </p>
           )}
+          {!query.trim() && list.length === 0 && (
+            <div className="pt-4">
+              <p className="px-3 pb-2 text-[11px] font-semibold text-muted-foreground">
+                ابدأ محادثة مع زميل
+              </p>
+              <div className="space-y-1">
+                {users
+                  .filter((u) => u.id !== currentUserId && !u.disabled)
+                  .map((u) => (
+                    <button
+                      key={u.id}
+                      onClick={() => void beginChat(u.id)}
+                      className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-colors active:bg-surface-2/60"
+                    >
+                      <span
+                        className="flex size-9 items-center justify-center rounded-xl text-[11px] font-bold text-primary-foreground"
+                        style={{ backgroundColor: u.color }}
+                      >
+                        {initials(u.name)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">
+                          {u.name}
+                        </span>
+                        <span className="block truncate text-[11px] text-muted-foreground">
+                          {u.title}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+
           {list.map((c) => {
             const last = visible
               .filter((m) => m.conversationId === c.id)

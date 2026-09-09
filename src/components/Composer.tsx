@@ -34,38 +34,51 @@ export function Composer({ conversationId }: { conversationId: string }) {
   const [text, setText] = useState("");
   const [policy, setPolicy] = useState<Policy>(defaultPolicy);
   const [pending, setPending] = useState<Attachment | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | Blob | null>(null);
+  const [sending, setSending] = useState(false);
   const [recording, setRecording] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recRef = useRef<MediaRecorder | null>(null);
   const startedAt = useRef(0);
 
-  const send = () => {
+  const send = async () => {
+    if (sending) return;
     if (!text.trim() && !pending) return;
-    sendMessage({
-      conversationId,
-      text: text.trim() || undefined,
-      attachment: pending ?? undefined,
-      policy,
-    });
+    const body = text.trim();
+    const att = pending;
+    const file = pendingFile;
     setText("");
     setPending(null);
+    setPendingFile(null);
+    setSending(true);
+    try {
+      await sendMessage({
+        conversationId,
+        text: body || undefined,
+        attachment: att ?? undefined,
+        file: file ?? undefined,
+        policy,
+      });
+    } catch {
+      toast.error("تعذّر إرسال الرسالة");
+    } finally {
+      setSending(false);
+    }
   };
 
   const pickFile = (file: File) => {
     const kind = guessKind(file.name);
+    setPendingFile(file);
     setPending({
       id: `att-${Date.now()}`,
       kind,
       name: file.name,
       size: `${Math.max(1, Math.round(file.size / 1024))} ك.ب`,
-      src: kind === "image" ? URL.createObjectURL(file) : undefined,
-      pages:
-        kind === "image"
-          ? undefined
-          : ["هذا الملف يُعرض داخل التطبيق فقط في النسخة التجريبية."],
+      ...(kind === "image" ? {} : { pages: ["يُعرض هذا الملف داخل التطبيق فقط."] }),
     });
   };
+
 
   const toggleRecording = async () => {
     if (recording) {
@@ -80,12 +93,12 @@ export function Composer({ conversationId }: { conversationId: string }) {
       rec.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         const blob = new Blob(chunks, { type: "audio/webm" });
+        setPendingFile(blob);
         setPending({
           id: `voice-${Date.now()}`,
           kind: "audio",
-          name: "ملاحظة صوتية",
+          name: "ملاحظة صوتية.webm",
           size: `${Math.max(1, Math.round(blob.size / 1024))} ك.ب`,
-          src: URL.createObjectURL(blob),
           durationSec: Math.max(
             1,
             Math.round((Date.now() - startedAt.current) / 1000),
@@ -121,7 +134,10 @@ export function Composer({ conversationId }: { conversationId: string }) {
             variant="ghost"
             size="icon"
             className="size-6"
-            onClick={() => setPending(null)}
+            onClick={() => {
+              setPending(null);
+              setPendingFile(null);
+            }}
             aria-label="إزالة المرفق"
           >
             <X className="size-3.5" />

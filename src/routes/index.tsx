@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Droplets, ScanEye, ShieldCheck, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,23 +35,75 @@ const highlights = [
 ];
 
 function LoginPage() {
-  const { signIn, users } = useApp();
+  const { signIn, signUp, resetMemberPassword, currentUserId, ready } = useApp();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"welcome" | "signin">("welcome");
-  const [email, setEmail] = useState(`salem@${COMPANY_DOMAIN}`);
-  const [password, setPassword] = useState("demo1234");
+  const [mode, setMode] = useState<"welcome" | "signin" | "signup" | "forgot">(
+    "welcome",
+  );
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (ready && currentUserId) navigate({ to: "/chat" });
+  }, [ready, currentUserId, navigate]);
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
+
+    if (mode === "forgot") {
+      if (!email.trim()) { toast.error("أدخل بريدك الرسمي"); return; }
+      setBusy(true);
+      const error = await resetMemberPassword(email.trim());
+      setBusy(false);
+      if (error) { toast.error("تعذّر إرسال رابط الاستعادة"); return; }
+      toast.success("أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك");
+      setMode("signin");
+      return;
+    }
+
     if (!email.trim() || !password.trim()) {
       toast.error("أدخل البريد وكلمة المرور");
       return;
     }
-    if (signIn(email)) {
+
+    setBusy(true);
+    if (mode === "signup") {
+      if (!name.trim()) {
+        setBusy(false);
+        { toast.error("أدخل الاسم الكامل"); return; }
+      }
+      if (password.length < 8) {
+        setBusy(false);
+        { toast.error("كلمة المرور يجب ألا تقل عن 8 أحرف"); return; }
+      }
+      const res = await signUp({ email: email.trim(), password, name: name.trim() });
+      if (res.error) {
+        setBusy(false);
+        toast.error(
+          res.error.includes("already")
+            ? "هذا البريد مسجّل مسبقاً"
+            : "تعذّر إنشاء الحساب",
+        );
+        return;
+      }
+      if (res.needsConfirmation) {
+        setBusy(false);
+        toast.success("أرسلنا رسالة تأكيد إلى بريدك، فعّل الحساب ثم سجّل الدخول");
+        setMode("signin");
+        return;
+      }
+      setBusy(false);
       navigate({ to: "/chat" });
-    } else {
-      toast.error("هذا الحساب معطّل، راجع مسؤول النظام");
+      return;
     }
+
+    const error = await signIn(email.trim(), password);
+    setBusy(false);
+    if (error) { toast.error(error); return; }
+    navigate({ to: "/chat" });
   };
 
   return (
@@ -107,16 +159,26 @@ function LoginPage() {
               <Button
                 variant="secondary"
                 className="h-14 w-full rounded-2xl text-base font-bold shadow-none"
-                onClick={() => {
-                  signIn(`salem@${COMPANY_DOMAIN}`);
-                  navigate({ to: "/chat" });
-                }}
+                onClick={() => setMode("signup")}
               >
-                تجربة سريعة كمدير
+                إنشاء حساب جديد
               </Button>
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-4 rounded-3xl bg-surface-2 p-5">
+              {mode === "signup" ? (
+                <div className="space-y-1.5 text-start">
+                  <Label htmlFor="name">الاسم الكامل</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="مثال: سالم العتيبي"
+                    className="h-13 rounded-2xl border-border bg-surface shadow-none"
+                  />
+                </div>
+              ) : null}
+
               <div className="space-y-1.5 text-start">
                 <Label htmlFor="email">البريد الرسمي</Label>
                 <Input
@@ -129,44 +191,42 @@ function LoginPage() {
                   className="h-13 rounded-2xl border-border bg-surface shadow-none"
                 />
               </div>
-              <div className="space-y-1.5 text-start">
-                <Label htmlFor="password">كلمة المرور</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  dir="ltr"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-13 rounded-2xl border-border bg-surface shadow-none"
-                />
-              </div>
+
+              {mode === "forgot" ? null : (
+                <div className="space-y-1.5 text-start">
+                  <Label htmlFor="password">كلمة المرور</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    dir="ltr"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-13 rounded-2xl border-border bg-surface shadow-none"
+                  />
+                </div>
+              )}
 
               <Button
                 type="submit"
+                disabled={busy}
                 className="h-14 w-full rounded-2xl text-base font-semibold"
               >
-                دخول آمن
+                {mode === "signup"
+                  ? "إنشاء الحساب"
+                  : mode === "forgot"
+                    ? "إرسال رابط الاستعادة"
+                    : "دخول آمن"}
               </Button>
 
-              <div className="border-t border-border pt-4">
-                <p className="text-xs font-medium text-foreground">
-                  نسخة تجريبية بدون قاعدة بيانات — اختر حساباً:
-                </p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {users
-                    .filter((u) => !u.disabled)
-                    .map((u) => (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => setEmail(u.email)}
-                        className="rounded-full border border-border bg-surface px-3 py-1.5 text-[11px] font-medium text-foreground transition-colors active:border-primary active:text-primary"
-                      >
-                        {u.name}
-                      </button>
-                    ))}
-                </div>
-              </div>
+              {mode === "signin" ? (
+                <button
+                  type="button"
+                  onClick={() => setMode("forgot")}
+                  className="w-full text-center text-xs font-semibold text-primary"
+                >
+                  نسيت كلمة المرور؟
+                </button>
+              ) : null}
 
               <Button
                 type="button"

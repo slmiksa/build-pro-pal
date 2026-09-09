@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const ChatRoute = ChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteCodeRoute = InviteCodeRouteImport.update({
   id: '/invite/$code',
   path: '/invite/$code',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/audit': typeof AuditRoute
   '/chat': typeof ChatRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/invite/$code': typeof InviteCodeRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/audit': typeof AuditRoute
   '/chat': typeof ChatRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/invite/$code': typeof InviteCodeRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,23 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/audit': typeof AuditRoute
   '/chat': typeof ChatRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/invite/$code': typeof InviteCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/audit' | '/chat' | '/invite/$code'
+  fullPaths:
+    '/' | '/admin' | '/audit' | '/chat' | '/reset-password' | '/invite/$code'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/audit' | '/chat' | '/invite/$code'
-  id: '__root__' | '/' | '/admin' | '/audit' | '/chat' | '/invite/$code'
+  to: '/' | '/admin' | '/audit' | '/chat' | '/reset-password' | '/invite/$code'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/audit'
+    | '/chat'
+    | '/reset-password'
+    | '/invite/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +93,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuditRoute: typeof AuditRoute
   ChatRoute: typeof ChatRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   InviteCodeRoute: typeof InviteCodeRoute
 }
 
@@ -109,6 +127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$code': {
       id: '/invite/$code'
       path: '/invite/$code'
@@ -124,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuditRoute: AuditRoute,
   ChatRoute: ChatRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   InviteCodeRoute: InviteCodeRoute,
 }
 export const routeTree = rootRouteImport
