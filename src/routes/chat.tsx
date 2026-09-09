@@ -676,7 +676,9 @@ function NewChatDialog({
                 onClick={() => void onSubmitGroup()}
               >
                 إنشاء المجموعة
+              </Button>
             </TabsContent>
+
 
             <TabsContent value="invite" className="space-y-3 pt-3">
               <p className="text-xs text-muted-foreground">
