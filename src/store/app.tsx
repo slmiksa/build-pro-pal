@@ -860,28 +860,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addMember = useCallback<Ctx["addMember"]>(async ({ name, email, title, password }) => {
-    const { createMember } = await import("@/lib/members.functions");
-    try {
-      const res = await createMember({ data: { name, email, title, password } });
-      if (res.error) return { error: res.error };
-      await refresh();
-      return { error: null };
-    } catch {
-      return { error: "تعذّر إنشاء الحساب" };
+    const { error } = await supabase.rpc("admin_create_member", {
+      _email: email,
+      _password: password,
+      _name: name,
+      _title: title,
+    });
+    if (error) {
+      const msg = error.message || "";
+      if (msg.includes("email_exists")) return { error: "هذا البريد مسجّل مسبقاً" };
+      if (msg.includes("invalid_email")) return { error: "البريد غير صالح" };
+      if (msg.includes("invalid_password"))
+        return { error: "كلمة المرور يجب أن تكون بين 8 و 72 حرفاً" };
+      if (msg.includes("forbidden")) return { error: "هذه العملية للمسؤول فقط" };
+      return { error: `تعذّر إنشاء الحساب: ${msg}` };
     }
-  }, [refresh]);
+    await log("member_added", `إضافة عضو جديد: ${name} (${email})`);
+    await refresh();
+    return { error: null };
+  }, [log, refresh]);
 
   const resetMemberPassword = useCallback<Ctx["resetMemberPassword"]>(
     async (userId, password) => {
-      const { setMemberPassword } = await import("@/lib/members.functions");
-      try {
-        const res = await setMemberPassword({ data: { userId, password } });
-        return res.error;
-      } catch {
+      const { error } = await supabase.rpc("admin_set_member_password", {
+        _user_id: userId,
+        _password: password,
+      });
+      if (error) {
+        if (error.message.includes("forbidden")) return "هذه العملية للمسؤول فقط";
+        if (error.message.includes("invalid_password"))
+          return "كلمة المرور يجب أن تكون بين 8 و 72 حرفاً";
         return "تعذّر تغيير كلمة المرور";
       }
+      await log("member_added", `تغيير كلمة مرور عضو (${userId})`);
+      return null;
     },
-    [],
+    [log],
   );
 
   const toggleMemberDisabled = useCallback<Ctx["toggleMemberDisabled"]>(
