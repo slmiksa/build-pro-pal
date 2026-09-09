@@ -53,20 +53,90 @@ export function ProtectedViewer({
     return () => document.removeEventListener("copy", onCopy);
   }, [policy.allowCopy, att?.name, log, currentUser?.id, message.id]);
 
+  const path = att?.path;
+  const src = att?.src;
+
+  // Load the real file bytes from private storage, once per attachment.
+  useEffect(() => {
+    let cancelled = false;
+    let url: string | null = null;
+    setState("loading");
+    setBlob(null);
+    setObjectUrl(null);
+    setTextBody(null);
+
+    const load = async () => {
+      let data: Blob | null = null;
+      if (path) {
+        data = await fetchAttachment(path);
+      } else if (src) {
+        try {
+          const res = await fetch(src);
+          if (res.ok) data = await res.blob();
+        } catch {
+          data = null;
+        }
+      }
+      if (cancelled) return;
+      if (!data) {
+        setState("error");
+        return;
+      }
+      url = URL.createObjectURL(data);
+      setBlob(data);
+      setObjectUrl(url);
+      const type = data.type || "";
+      if (type.startsWith("text/") || type.includes("json")) {
+        const body = await data.text();
+        if (!cancelled) setTextBody(body);
+      }
+      if (!cancelled) setState("ready");
+    };
+
+    if (path || src) void load();
+    else setState("error");
+
+    return () => {
+      cancelled = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [path, src, fetchAttachment]);
+
   if (!att) return null;
 
-  const tryDownload = () => {
-    if (policy.allowDownload) {
-      toast.success("بدأ التحميل (تجريبي)");
+  const type = blob?.type || att.mime || "";
+  const isImage = att.kind === "image" || type.startsWith("image/");
+  const isPdf = att.kind === "pdf" || type === "application/pdf";
+  const isAudio = att.kind === "audio" || type.startsWith("audio/");
+  const isVideo = type.startsWith("video/");
+
+  const tryDownload = async () => {
+    if (!policy.allowDownload) {
+      await log("download_blocked", `محاولة تحميل مرفوضة لـ «${att.name}»`, {
+        actorId: currentUser?.id,
+        messageId: message.id,
+      });
+      toast.error("التحميل غير مسموح", {
+        description: "حدد المرسل عرض الملف داخل التطبيق فقط.",
+      });
       return;
     }
-    log("download_blocked", `محاولة تحميل مرفوضة لـ «${att.name}»`, {
-      actorId: currentUser?.id,
-      messageId: message.id,
-    });
-    toast.error("التحميل غير مسموح", {
-      description: "حدد المرسل عرض الملف داخل التطبيق فقط.",
-    });
+    let url = objectUrl;
+    if (!url && path) {
+      const data = await fetchAttachment(path);
+      if (data) url = URL.createObjectURL(data);
+    }
+    if (!url) {
+      toast.error("تعذّر تحميل الملف");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = att.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast.success("تم حفظ الملف");
   };
 
   return (
