@@ -801,6 +801,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       messages,
       audit,
       invites,
+      allowedDomains,
+      setAllowedDomains,
       currentUserId,
       currentUser,
       isAdmin,
