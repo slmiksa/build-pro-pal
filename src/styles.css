@@ -150,11 +150,11 @@
 
 /* Native-app safe areas */
 @utility pb-safe {
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.25rem);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 html[data-keyboard-open] .pb-safe {
-  padding-bottom: 0.25rem;
+  padding-bottom: 0px;
 }
 
 
