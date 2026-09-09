@@ -548,7 +548,6 @@ function ChatPage() {
 function NewChatDialog({
   open,
   onOpenChange,
-  isAdmin,
   email,
   setEmail,
   onSubmitEmail,
@@ -557,12 +556,14 @@ function NewChatDialog({
   groupMembers,
   setGroupMembers,
   onSubmitGroup,
+  inviteEmail,
+  setInviteEmail,
+  onSubmitInvite,
   people,
   busy,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  isAdmin: boolean;
   email: string;
   setEmail: (v: string) => void;
   onSubmitEmail: () => void | Promise<void>;
@@ -571,9 +572,13 @@ function NewChatDialog({
   groupMembers: string[];
   setGroupMembers: (v: string[]) => void;
   onSubmitGroup: () => void | Promise<void>;
+  inviteEmail: string;
+  setInviteEmail: (v: string) => void;
+  onSubmitInvite: () => void | Promise<void>;
   people: { id: string; name: string; title: string; email: string; color: string }[];
   busy: boolean;
 }) {
+
   const toggle = (id: string) =>
     setGroupMembers(
       groupMembers.includes(id)
