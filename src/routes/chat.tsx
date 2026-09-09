@@ -379,7 +379,10 @@ function ChatPage() {
         <NewChatDialog
           open={newOpen}
           onOpenChange={setNewOpen}
-          isAdmin={isAdmin}
+          inviteEmail={inviteEmail}
+          setInviteEmail={setInviteEmail}
+          onSubmitInvite={submitInvite}
+
           email={email}
           setEmail={setEmail}
           onSubmitEmail={submitEmail}
