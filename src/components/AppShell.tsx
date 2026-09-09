@@ -54,37 +54,37 @@ export function AppShell({
     <div className="app-viewport flex justify-center bg-surface-2 lg:py-8">
       <div className="relative flex h-full w-full max-w-[430px] flex-col overflow-hidden bg-background lg:h-[calc(100dvh-4rem)] lg:rounded-[2.75rem] lg:shadow-[0_32px_64px_-24px_rgba(14,21,18,0.18)]">
         {header ?? (
-          <header className="pt-safe shrink-0 bg-background px-6 pt-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 pt-1">
-                <h1 className="font-display truncate text-[27px] font-semibold">
+          <header className="pt-safe shrink-0 bg-background px-5 pt-3 pb-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="font-display truncate text-[22px] leading-tight font-semibold tracking-[-0.01em]">
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                  <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
                     {subtitle}
                   </p>
                 )}
               </div>
               {showProfile && (
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-surface-2/80 p-1">
+                  <span
+                    className="flex size-8 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground"
+                    style={{ backgroundColor: currentUser.color }}
+                  >
+                    {initials(currentUser.name)}
+                  </span>
                   <button
                     type="button"
                     aria-label="خروج"
-                    className="grid size-10 place-items-center rounded-full bg-surface-2 text-foreground transition-transform active:scale-95"
+                    className="grid size-8 place-items-center rounded-full text-muted-foreground transition-all hover:bg-background hover:text-foreground active:scale-95"
                     onClick={async () => {
                       await signOut();
                       navigate({ to: "/", replace: true });
                     }}
                   >
-                    <LogOut className="size-[18px]" />
+                    <LogOut className="size-[17px]" />
                   </button>
-                  <span
-                    className="flex size-10 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground ring-2 ring-background"
-                    style={{ backgroundColor: currentUser.color }}
-                  >
-                    {initials(currentUser.name)}
-                  </span>
                 </div>
               )}
             </div>
