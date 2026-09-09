@@ -131,8 +131,8 @@ export function Composer({ conversationId }: { conversationId: string }) {
       id: `att-${Date.now()}`,
       kind,
       name: file.name,
+      mime: file.type || undefined,
       size: `${Math.max(1, Math.round(file.size / 1024))} ك.ب`,
-      ...(kind === "image" ? {} : { pages: ["يُعرض هذا الملف داخل التطبيق فقط."] }),
     });
   };
 
