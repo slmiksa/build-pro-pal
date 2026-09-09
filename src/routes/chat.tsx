@@ -131,9 +131,15 @@ function ChatPage() {
   }, [activeId]);
 
 
-  const list = conversations.filter((c) =>
-    conversationTitle(c).includes(query.trim()),
-  );
+  const lastAt = (id: string) =>
+    visible.filter((m) => m.conversationId === id).slice(-1)[0]?.createdAt ?? 0;
+
+  const list = conversations
+    .filter((c) => conversationTitle(c).includes(query.trim()))
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      return lastAt(b.id) - lastAt(a.id);
+    });
 
   const openAttachment = async (m: Message) => {
     if ((await registerOpen(m.id)) === "limit") {
