@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type Context,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type {
@@ -96,9 +97,9 @@ type Ctx = {
 // Keep a single context instance even if this module is evaluated twice
 // (route code-splitting / HMR can create duplicate module instances).
 const globalCtxStore = globalThis as unknown as {
-  __dir3AppContext?: React.Context<Ctx | null>;
+  __dir3AppContext?: Context<Ctx | null>;
 };
-const AppContext: React.Context<Ctx | null> =
+const AppContext: Context<Ctx | null> =
   globalCtxStore.__dir3AppContext ??
   (globalCtxStore.__dir3AppContext = createContext<Ctx | null>(null));
 
