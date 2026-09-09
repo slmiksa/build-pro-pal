@@ -7,8 +7,10 @@ import {
   FileText,
   LogIn,
   ScanEye,
+  Forward,
   ShieldAlert,
   Timer,
+  Users2,
   UserPlus,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -51,6 +53,8 @@ const meta: Record<
   invite_created: { label: "إنشاء دعوة", icon: UserPlus, tone: "info" },
   member_added: { label: "إضافة عضو", icon: UserPlus, tone: "info" },
   member_disabled: { label: "تغيير حالة عضو", icon: ShieldAlert, tone: "warn" },
+  message_forwarded: { label: "إعادة توجيه رسالة", icon: Forward, tone: "info" },
+  group_created: { label: "إنشاء مجموعة", icon: Users2, tone: "info" },
 };
 
 const filters: { key: "all" | AuditType; label: string }[] = [
