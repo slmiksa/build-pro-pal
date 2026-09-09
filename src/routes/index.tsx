@@ -19,11 +19,21 @@ export const Route = createFileRoute("/")({
         content:
           "منصة محادثات داخلية للشركة: رسائل وملفات بصلاحيات يحددها المرسل، مع منع التحميل والنسخ وعلامة مائية وسجل تدقيق كامل.",
       },
-      { property: "og:title", content: "درع · المحادثات المحمية" },
+      { property: "og:title", content: "درع للتواصل" },
       {
         property: "og:description",
-        content: "تواصل داخلي آمن للمدراء لا تخرج ملفاته من الشركة.",
+        content: "درع الحماية والأمان لتواصل بلا تسريب",
       },
+      { property: "og:image", content: "https://shield.lamhasec.com/og.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "درع للتواصل" },
+      {
+        name: "twitter:description",
+        content: "درع الحماية والأمان لتواصل بلا تسريب",
+      },
+      { name: "twitter:image", content: "https://shield.lamhasec.com/og.png" },
     ],
   }),
   component: LoginPage,
