@@ -188,40 +188,45 @@ function AdminPage() {
         </div>
 
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <div className="min-w-0 overflow-hidden rounded-2xl border border-border bg-surface">
-            <div className="border-b border-border px-4 py-3 text-sm font-semibold">
-              أعضاء الشركة ({users.length})
+        <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+          <div className="card-soft min-w-0 overflow-hidden">
+            <div className="flex items-center justify-between border-b border-border/70 px-4 py-3.5">
+              <span className="font-display text-[15px] font-semibold">
+                أعضاء الشركة
+              </span>
+              <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                {users.length}
+              </span>
             </div>
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-border/70">
               {users.map((u) => (
                 <li
                   key={u.id}
-                  className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-3 px-4 py-3.5"
+                  className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-3.5 px-4 py-4"
                 >
                   <span
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-background"
+                    className="flex size-10 shrink-0 items-center justify-center rounded-2xl text-[12px] font-bold text-background"
                     style={{ backgroundColor: u.color }}
                   >
                     {initials(u.name)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-sm font-medium">
+                      <span className="truncate text-[14px] font-semibold">
                         {u.name}
                       </span>
                       {u.role === "admin" && (
-                        <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                        <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[10px] font-medium text-primary">
                           مسؤول
                         </span>
                       )}
                       {u.disabled && (
-                        <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] text-destructive">
+                        <span className="rounded-full bg-destructive/12 px-2 py-0.5 text-[10px] font-medium text-destructive">
                           معطّل
                         </span>
                       )}
                     </div>
-                    <div className="mt-0.5 truncate text-[11px] text-muted-foreground" dir="ltr">
+                    <div className="mt-1 truncate text-[11.5px] text-muted-foreground" dir="ltr">
                       {u.email} · {u.title}
                     </div>
                   </div>
@@ -229,8 +234,12 @@ function AdminPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    className="min-w-0 rounded-xl shadow-none"
-                    onClick={() => void sendReset(u.email)}
+                    className="min-w-0 rounded-2xl shadow-none"
+                    disabled={!isAdmin}
+                    onClick={() => {
+                      setPwValue("");
+                      setPwTarget({ id: u.id, name: u.name });
+                    }}
                   >
                     <KeyRound className="size-3.5" />
                     <span className="truncate">كلمة المرور</span>
@@ -238,7 +247,7 @@ function AdminPage() {
                   <Button
                     variant={u.disabled ? "secondary" : "outline"}
                     size="sm"
-                    className="min-w-0 rounded-xl shadow-none"
+                    className="min-w-0 rounded-2xl shadow-none"
                     onClick={() => toggleMemberDisabled(u.id)}
                   >
                     <Power className="size-3.5" />
