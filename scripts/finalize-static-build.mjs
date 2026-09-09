@@ -4,10 +4,15 @@ import process from "node:process";
 
 const root = process.cwd();
 const dist = path.join(root, "dist");
-const client = path.join(dist, "client");
 const staged = path.join(root, ".static-build-output");
 const sourceHtaccess = path.join(root, ".htaccess");
 const productionRoot = "/home/shield.lamhasec.com/public_html";
+const staticOutputCandidates = [
+  path.join(root, ".output", "public"),
+  path.join(root, ".output", "client"),
+  path.join(dist, "client"),
+  path.join(dist, "public"),
+];
 
 async function exists(filePath) {
   try {
@@ -18,13 +23,23 @@ async function exists(filePath) {
   }
 }
 
-if (!(await exists(path.join(client, "index.html")))) {
-  throw new Error("لم يتم إنشاء dist/client/index.html، لذلك تم إيقاف البناء بدل نشر ملفات ناقصة.");
+let staticOutput;
+for (const candidate of staticOutputCandidates) {
+  if (await exists(path.join(candidate, "index.html"))) {
+    staticOutput = candidate;
+    break;
+  }
+}
+
+if (!staticOutput) {
+  throw new Error(
+    "لم يتم العثور على index.html في ناتج الموقع (.output/public أو dist/client).",
+  );
 }
 
 await rm(staged, { recursive: true, force: true });
 await mkdir(staged, { recursive: true });
-await cp(client, staged, { recursive: true, force: true });
+await cp(staticOutput, staged, { recursive: true, force: true });
 await cp(sourceHtaccess, path.join(staged, ".htaccess"), { force: true });
 
 // لا نُبقي أي ناتج خادم أو ملفات قديمة داخل dist.
