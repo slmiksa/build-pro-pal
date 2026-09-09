@@ -10,6 +10,10 @@ export type User = {
   role: Role;
   online: boolean;
   disabled: boolean;
+  /** Can see the full member directory (otherwise: search by email only). */
+  canBrowseDirectory: boolean;
+  /** Hidden from other members' directory lists. */
+  hiddenInDirectory: boolean;
   color: string;
 };
 

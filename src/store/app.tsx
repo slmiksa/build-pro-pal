@@ -961,6 +961,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addMember,
       resetMemberPassword,
       toggleMemberDisabled,
+      setDirectoryFlags,
       createInvite,
     }),
     [
@@ -997,6 +998,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addMember,
       resetMemberPassword,
       toggleMemberDisabled,
+      setDirectoryFlags,
       createInvite,
     ],
   );
