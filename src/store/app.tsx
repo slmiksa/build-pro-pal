@@ -850,6 +850,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [users, log, refresh],
   );
 
+  const setDirectoryFlags = useCallback<Ctx["setDirectoryFlags"]>(
+    async (id, patch) => {
+      const user = users.find((u) => u.id === id);
+      if (!user) return;
+      const update: Record<string, boolean> = {};
+      if (patch.canBrowseDirectory !== undefined)
+        update['can_browse_directory'] = patch.canBrowseDirectory;
+      if (patch.hiddenInDirectory !== undefined)
+        update['hidden_in_directory'] = patch.hiddenInDirectory;
+      if (Object.keys(update).length === 0) return;
+      const { error } = await supabase.from("profiles").update(update).eq("id", id);
+      if (error) return;
+      await log("member_disabled", `تحديث ظهور الأعضاء لحساب ${user.name}`);
+      await refresh();
+    },
+    [users, log, refresh],
+  );
+
+
   const setAllowedDomains = useCallback<Ctx["setAllowedDomains"]>(
     async (domains) => {
       const clean = Array.from(
