@@ -81,6 +81,7 @@ function ChatPage() {
   const [busy, setBusy] = useState(false);
   const [forwarding, setForwarding] = useState<Message | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const visible = useMemo(
     () => messages.filter((m) => !isExpired(m)),
@@ -446,7 +447,10 @@ function ChatPage() {
         </header>
       }
     >
-      <div className="chat-paper min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4">
+      <div
+        ref={scrollRef}
+        className="chat-paper min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4"
+      >
         {thread.length === 0 && (
           <p className="pt-10 text-center text-sm text-muted-foreground">
             لا توجد رسائل بعد.
