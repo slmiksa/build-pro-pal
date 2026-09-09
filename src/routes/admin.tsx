@@ -373,6 +373,9 @@ function AdminPage() {
                 إضافة
               </Button>
             </form>
+              </>
+            )}
+
 
             <div className="space-y-3 card-soft p-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
