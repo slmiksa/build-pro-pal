@@ -854,11 +854,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async (id, patch) => {
       const user = users.find((u) => u.id === id);
       if (!user) return;
-      const update: Record<string, boolean> = {};
+      const update: {
+        can_browse_directory?: boolean;
+        hidden_in_directory?: boolean;
+      } = {};
       if (patch.canBrowseDirectory !== undefined)
-        update['can_browse_directory'] = patch.canBrowseDirectory;
+        update.can_browse_directory = patch.canBrowseDirectory;
       if (patch.hiddenInDirectory !== undefined)
-        update['hidden_in_directory'] = patch.hiddenInDirectory;
+        update.hidden_in_directory = patch.hiddenInDirectory;
       if (Object.keys(update).length === 0) return;
       const { error } = await supabase.from("profiles").update(update).eq("id", id);
       if (error) return;
