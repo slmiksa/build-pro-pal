@@ -49,14 +49,23 @@ export function useScreenGuard(options: {
         trigger("اختصار التقاط شاشة");
       }
     };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+        window.setTimeout(() => setMasked(false), 1200);
+      }
+    };
     const onContext = (e: MouseEvent) => e.preventDefault();
 
-    window.addEventListener("blur", onBlur);
-    document.addEventListener("visibilitychange", onVisibility);
-    document.addEventListener("mouseleave", onPointerLeave);
+    // Mobile capture heuristics: iOS/Android fire a rapid screen-size or
+    // pixel-ratio change plus a short app-switch when the system screenshot
+    // UI appears. Mask instantly on those signals only.
+    const onMobileCapture = () => trigger("محاولة التقاط شاشة");
+
     window.addEventListener("keydown", onKey, true);
-    window.addEventListener("keyup", onKey, true);
+    window.addEventListener("keyup", onKeyUp, true);
     document.addEventListener("contextmenu", onContext);
+    window.matchMedia?.("(display-mode: standalone)");
+    window.addEventListener("resize", onMobileCapture);
 
     // Screen-recording detection: patch getDisplayMedia for this session.
     const md = navigator.mediaDevices as MediaDevices | undefined;
