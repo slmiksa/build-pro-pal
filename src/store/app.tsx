@@ -719,6 +719,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Stable identity: reads live message state from a ref so marking a thread
   // read can never re-trigger the effect that called it (refresh -> new
   // messages -> new callback -> mark again -> infinite loop / frozen tab).
+  const togglePinned = useCallback<Ctx["togglePinned"]>(
+    async (conversationId) => {
+      const me = currentUserRef.current;
+      if (!me) return;
+      let next = false;
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== conversationId) return c;
+          next = !c.pinned;
+          return { ...c, pinned: next };
+        }),
+      );
+      await supabase
+        .from("conversation_members")
+        .update({ pinned: next })
+        .eq("conversation_id", conversationId)
+        .eq("user_id", me);
+    },
+    [],
+  );
+
   const markRead = useCallback<Ctx["markRead"]>(
     async (conversationId) => {
       const me = currentUserRef.current;
