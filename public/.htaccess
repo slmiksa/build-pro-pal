@@ -1,0 +1,44 @@
+# Apache config for SPA hosting (public_html)
+# --------------------------------------------
+
+# تفعيل إعادة الكتابة
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # لا تعيد كتابة الملفات والمجلدات الموجودة فعليًا (assets, favicon, ...)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # أي مسار آخر يوجَّه إلى index.html (SPA fallback)
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# الترويسات الأمنية
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+  # كاش طويل لملفات assets المبصومة بالهاش
+  <FilesMatch "\.(js|css|woff2?|png|jpg|jpeg|webp|svg|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # index.html بدون كاش حتى تصل التحديثات فورًا
+  <FilesMatch "^index\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# ضغط الملفات النصية
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# منع الوصول للملفات الحساسة
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
