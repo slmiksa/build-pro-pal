@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Mic, Paperclip, Send, ShieldCheck, Smile, Square, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/popover";
 import { PolicyPanel } from "@/components/PolicyPanel";
 import { policyItems } from "@/components/PolicyBadges";
-import { defaultPolicy, type Attachment, type Policy } from "@/lib/types";
+import { defaultPolicy, type Attachment, type Policy, type User } from "@/lib/types";
+import { initials } from "@/lib/format";
 import { useApp } from "@/store/app";
 
 function guessKind(name: string): Attachment["kind"] {
@@ -30,8 +31,9 @@ const EMOJIS = [
 ] as const;
 
 export function Composer({ conversationId }: { conversationId: string }) {
-  const { sendMessage } = useApp();
+  const { sendMessage, conversations, users, currentUserId } = useApp();
   const [text, setText] = useState("");
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [policy, setPolicy] = useState<Policy>(defaultPolicy);
   const [pending, setPending] = useState<Attachment | null>(null);
   const [pendingFile, setPendingFile] = useState<File | Blob | null>(null);
@@ -42,6 +44,59 @@ export function Composer({ conversationId }: { conversationId: string }) {
   const recRef = useRef<MediaRecorder | null>(null);
   const startedAt = useRef(0);
 
+  const conversation = conversations.find((c) => c.id === conversationId);
+  const isGroup = conversation?.kind === "group";
+  const members = useMemo<User[]>(
+    () =>
+      (conversation?.memberIds ?? [])
+        .filter((id) => id !== currentUserId)
+        .map((id) => users.find((u) => u.id === id))
+        .filter((u): u is User => Boolean(u) && !u!.disabled),
+    [conversation, users, currentUserId],
+  );
+
+  const mentionMatches = useMemo(() => {
+    if (mentionQuery === null || !isGroup) return [];
+    const q = mentionQuery.trim().toLowerCase();
+    return members
+      .filter(
+        (u) =>
+          !q ||
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q),
+      )
+      .slice(0, 6);
+  }, [mentionQuery, members, isGroup]);
+
+  /** Users actually referenced by an @name still present in the text. */
+  const mentionedIds = (body: string) =>
+    members.filter((u) => body.includes(`@${u.name}`)).map((u) => u.id);
+
+  const onTextChange = (value: string) => {
+    setText(value);
+    if (!isGroup) return;
+    const upto = value.slice(0, inputRef.current?.selectionStart ?? value.length);
+    const match = /(?:^|\s)@([^\s@]{0,30})$/.exec(upto);
+    setMentionQuery(match ? (match[1] ?? "") : null);
+  };
+
+  const pickMention = (user: User) => {
+    const el = inputRef.current;
+    const caret = el?.selectionStart ?? text.length;
+    const before = text.slice(0, caret);
+    const after = text.slice(caret);
+    const replaced = before.replace(/(?:^|\s)@([^\s@]{0,30})$/, (whole) =>
+      `${whole.startsWith("@") ? "" : whole[0]}@${user.name} `,
+    );
+    setText(replaced + after);
+    setMentionQuery(null);
+    requestAnimationFrame(() => {
+      el?.focus();
+      const pos = replaced.length;
+      el?.setSelectionRange(pos, pos);
+    });
+  };
+
   const send = async () => {
     if (sending) return;
     if (!text.trim() && !pending) return;
@@ -49,6 +104,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
     const att = pending;
     const file = pendingFile;
     setText("");
+    setMentionQuery(null);
     setPending(null);
     setPendingFile(null);
     setSending(true);
@@ -56,6 +112,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
       await sendMessage({
         conversationId,
         text: body || undefined,
+        mentions: mentionedIds(body),
         attachment: att ?? undefined,
         file: file ?? undefined,
         policy,
@@ -124,6 +181,34 @@ export function Composer({ conversationId }: { conversationId: string }) {
 
   return (
     <div className="pb-safe shrink-0 bg-background px-5 pt-3">
+      {mentionMatches.length > 0 && (
+        <div className="mb-2 max-h-52 overflow-y-auto rounded-2xl border border-border bg-background p-1 shadow-lg">
+          <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground">
+            ذكر عضو من المجموعة
+          </p>
+          {mentionMatches.map((u) => (
+            <button
+              key={u.id}
+              type="button"
+              onClick={() => pickMention(u)}
+              className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-start transition-colors hover:bg-surface-2 active:bg-surface-2"
+            >
+              <span
+                className="flex size-7 items-center justify-center rounded-lg text-[10px] font-bold text-primary-foreground"
+                style={{ backgroundColor: u.color }}
+              >
+                {initials(u.name)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">{u.name}</span>
+                <span className="block truncate text-[10px] text-muted-foreground">
+                  {u.title}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
       {pending && (
         <div className="mb-2 flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2 text-xs">
           <Paperclip className="size-3.5 text-primary" />
@@ -176,7 +261,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
 
           <Textarea
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => onTextChange(e.target.value)}
             ref={inputRef}
             onKeyDown={(e) => {
               // Enter = سطر جديد. الإرسال بالزر أو ⌘/Ctrl + Enter.
@@ -186,7 +271,13 @@ export function Composer({ conversationId }: { conversationId: string }) {
               }
             }}
             rows={1}
-            placeholder={recording ? "جارٍ التسجيل…" : "اكتب رسالة محمية…"}
+            placeholder={
+              recording
+                ? "جارٍ التسجيل…"
+                : isGroup
+                  ? "اكتب رسالة محمية… استخدم @ لذكر عضو"
+                  : "اكتب رسالة محمية…"
+            }
             className="max-h-28 min-h-9 min-w-0 flex-1 resize-none border-none bg-transparent px-1 py-2 text-base font-medium shadow-none focus-visible:ring-0"
           />
 
