@@ -336,6 +336,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           used: i.used,
         })),
       );
+
+      setAllowedDomainsState(settingsRes.data?.allowed_domains ?? []);
     } finally {
       loadingRef.current = false;
       setLoading(false);
