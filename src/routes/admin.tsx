@@ -202,6 +202,30 @@ function AdminPage() {
           </div>
 
           <div className="space-y-6">
+            <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Globe className="size-4 text-primary" /> نطاقات البريد المسموح بها
+              </div>
+              <p className="text-xs text-muted-foreground">
+                اكتب نطاقات شركتك مفصولة بفاصلة (مثال: company.sa, example.com).
+                اتركها فارغة للسماح بأي بريد.
+              </p>
+              <Input
+                dir="ltr"
+                value={domainsInput}
+                onChange={(e) => setDomainsInput(e.target.value)}
+                placeholder="company.sa, example.com"
+                disabled={!isAdmin}
+              />
+              <Button
+                className="w-full"
+                onClick={() => void saveDomains()}
+                disabled={!isAdmin || domainsBusy}
+              >
+                حفظ النطاقات
+              </Button>
+            </div>
+
             <form
               onSubmit={submit}
               className="space-y-3 rounded-2xl border border-border bg-surface p-4"
