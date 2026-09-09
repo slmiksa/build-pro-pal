@@ -31,12 +31,6 @@ export function useScreenGuard(options: {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
 
-    const onBlur = () => setMasked(true);
-    const onVisibility = () => {
-      if (document.visibilityState === "hidden") trigger("مغادرة النافذة");
-    };
-    const onPointerLeave = () => setMasked(true);
-
     // Mask on key DOWN of any modifier that can begin a capture shortcut,
     // before the full combination is completed.
     const onKey = (e: KeyboardEvent) => {
@@ -55,14 +49,25 @@ export function useScreenGuard(options: {
         trigger("اختصار التقاط شاشة");
       }
     };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+        window.setTimeout(() => setMasked(false), 1200);
+      }
+    };
     const onContext = (e: MouseEvent) => e.preventDefault();
 
-    window.addEventListener("blur", onBlur);
-    document.addEventListener("visibilitychange", onVisibility);
-    document.addEventListener("mouseleave", onPointerLeave);
+    // Mobile: the system screenshot UI steals focus for a moment. On touch
+    // devices that focus loss is the only available capture signal, so mask
+    // instantly there (desktop relies on the key shortcuts above instead).
+    const isTouch = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+    const onMobileCapture = () => {
+      if (isTouch) trigger("محاولة التقاط شاشة");
+    };
+
     window.addEventListener("keydown", onKey, true);
-    window.addEventListener("keyup", onKey, true);
+    window.addEventListener("keyup", onKeyUp, true);
     document.addEventListener("contextmenu", onContext);
+    if (isTouch) window.addEventListener("blur", onMobileCapture);
 
     // Screen-recording detection: patch getDisplayMedia for this session.
     const md = navigator.mediaDevices as MediaDevices | undefined;
@@ -75,11 +80,9 @@ export function useScreenGuard(options: {
     }
 
     return () => {
-      window.removeEventListener("blur", onBlur);
-      document.removeEventListener("visibilitychange", onVisibility);
-      document.removeEventListener("mouseleave", onPointerLeave);
+      window.removeEventListener("blur", onMobileCapture);
       window.removeEventListener("keydown", onKey, true);
-      window.removeEventListener("keyup", onKey, true);
+      window.removeEventListener("keyup", onKeyUp, true);
       document.removeEventListener("contextmenu", onContext);
       if (md && original) md.getDisplayMedia = original;
     };
