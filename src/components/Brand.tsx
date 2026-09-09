@@ -1,4 +1,4 @@
-import logo from "@/assets/logo.png";
+import logoAsset from "@/assets/logo.png.asset.json";
 import { COMPANY_NAME } from "@/data/seed";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ export function Brand({
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
       <img
-        src={logo}
+        src={logoAsset.url}
         alt=""
         width={dim}
         height={dim}
