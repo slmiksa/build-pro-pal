@@ -247,7 +247,7 @@ export function MessageItem({
                 )}
                 {mine && (
                   <DropdownMenuItem
-                    onSelect={() => revokeMessage(message.id)}
+                    className="text-destructive focus:text-destructive" onSelect={() => revokeMessage(message.id)}
                   >
                     <Trash2 className="size-4" /> سحب للجميع
                   </DropdownMenuItem>
