@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Watermark } from "@/components/Watermark";
 import { DocumentRender } from "@/components/DocumentRender";
 import { PolicyBadges } from "@/components/PolicyBadges";
-import { useScreenGuard } from "@/hooks/use-screen-guard";
 import { useApp } from "@/store/app";
 import type { Message } from "@/lib/types";
 
@@ -24,21 +23,6 @@ export function ProtectedViewer({
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const att = message.attachment;
   const policy = message.policy;
-
-  const { masked, reveal } = useScreenGuard({
-    enabled: policy.blockScreenshot,
-    onAttempt: (reason) => {
-      setAttempts((n) => n + 1);
-      log("screenshot_attempt", `${reason} أثناء عرض «${att?.name ?? "مرفق"}»`, {
-        actorId: currentUser?.id,
-        messageId: message.id,
-        conversationId: message.conversationId,
-      });
-      toast.warning("تم إخفاء المحتوى", {
-        description: "سُجلت المحاولة وأُبلغ المرسل.",
-      });
-    },
-  });
 
   useEffect(() => {
     const onCopy = (e: ClipboardEvent) => {
@@ -275,23 +259,6 @@ export function ProtectedViewer({
           )}
         </div>
 
-        {masked && (
-          <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-5 bg-black text-white">
-            <EyeOff className="size-10 text-white/70" />
-            <div className="px-10 text-center">
-              <p className="font-display text-lg font-semibold">
-                شاشة معتمة — ملف محمي
-              </p>
-              <p className="mt-1.5 max-w-xs text-xs leading-6 text-white/60">
-                هذا الملف محمي ضد الالتقاط ولا يمكن تحميله. اضغط للعرض مرة أخرى
-                — كل محاولة تُسجَّل باسمك.
-              </p>
-            </div>
-            <Button onClick={reveal} size="sm" className="rounded-full px-6 text-white">
-              <AlertTriangle className="size-4" /> عرض مرة أخرى
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );

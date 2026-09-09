@@ -106,7 +106,7 @@ export function MessageItem({
           onCopy={guardCopy}
           className={cn(
             "relative px-4 py-3 text-[15px] leading-7",
-            !message.policy.allowCopy && "no-leak",
+            message.policy.allowCopy ? "select-text" : "no-leak",
             mine
               ? "rounded-2xl rounded-tl-md bg-bubble-out text-bubble-out-foreground shadow-[0_8px_20px_-10px_rgba(18,185,129,0.55)]"
               : "rounded-2xl rounded-tr-md bg-bubble-in text-bubble-in-foreground",
