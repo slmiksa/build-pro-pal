@@ -648,9 +648,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const createGroup = useCallback<Ctx["createGroup"]>(
     async ({ name, memberIds }) => {
       if (!currentUserId) return { id: null, error: "الجلسة منتهية" };
-      if (!isAdmin) return { id: null, error: "إنشاء المجموعات للمسؤول فقط" };
       const title = name.trim();
       if (!title) return { id: null, error: "اكتب اسم المجموعة" };
+
 
       const { data, error } = await supabase
         .from("conversations")
