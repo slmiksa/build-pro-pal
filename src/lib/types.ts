@@ -30,6 +30,8 @@ export type Attachment = {
 export type Policy = {
   allowDownload: boolean;
   allowCopy: boolean;
+  /** Allow recipients to forward this message to another conversation. */
+  allowForward: boolean;
   blockScreenshot: boolean;
   watermark: boolean;
   /** Minutes until the message self-destructs. 0 = never. */
@@ -41,6 +43,7 @@ export type Policy = {
 export const defaultPolicy: Policy = {
   allowDownload: false,
   allowCopy: false,
+  allowForward: false,
   blockScreenshot: true,
   watermark: true,
   expiresInMin: 0,
@@ -60,6 +63,10 @@ export type Message = {
   policy: Policy;
   readBy: UserId[];
   opens: number;
+  /** Users mentioned with @ inside the message text. */
+  mentions: UserId[];
+  /** Set when this message was forwarded from another one. */
+  forwardedFrom?: string | undefined;
 };
 
 export type Conversation = {
@@ -80,7 +87,9 @@ export type AuditType =
   | "login"
   | "invite_created"
   | "member_added"
-  | "member_disabled";
+  | "member_disabled"
+  | "message_forwarded"
+  | "group_created";
 
 export type AuditEvent = {
   id: string;
