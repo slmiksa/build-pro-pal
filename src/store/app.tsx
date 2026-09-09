@@ -230,6 +230,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           role: roleByUser.get(p.id) ?? "manager",
           online: p.online,
           disabled: p.disabled,
+          canBrowseDirectory: p.can_browse_directory ?? true,
+          hiddenInDirectory: p.hidden_in_directory ?? false,
           color: p.color || colorFor(p.id),
         })),
       );
