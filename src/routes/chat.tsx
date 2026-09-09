@@ -129,6 +129,9 @@ function ChatPage() {
     }
     if (nearBottom()) jumpToEnd();
     return undefined;
+  }, [thread.length, activeId]);
+
+
 
 
 
