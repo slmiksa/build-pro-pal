@@ -244,11 +244,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         loadedUsers.push({
           id: me,
           name:
-            typeof metadata?.name === "string" && metadata.name.trim()
-              ? metadata.name
+            typeof metadata?.["name"] === "string" && metadata["name"].trim()
+              ? metadata["name"]
               : email.split("@")[0] || "مستخدم",
           email,
-          title: typeof metadata?.title === "string" ? metadata.title : "",
+          title: typeof metadata?.["title"] === "string" ? metadata["title"] : "",
           role: roleByUser.get(me) ?? "manager",
           online: true,
           disabled: false,
