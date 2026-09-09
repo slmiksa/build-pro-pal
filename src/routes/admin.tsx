@@ -260,7 +260,7 @@ function AdminPage() {
           </div>
 
           <div className="space-y-6">
-            <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
+            <div className="space-y-3 card-soft p-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <Globe className="size-4 text-primary" /> نطاقات البريد المسموح بها
               </div>
@@ -286,7 +286,7 @@ function AdminPage() {
 
             <form
               onSubmit={submit}
-              className="space-y-3 rounded-2xl border border-border bg-surface p-4"
+              className="space-y-3 card-soft p-4"
             >
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <UserPlus className="size-4 text-primary" /> إضافة عضو
@@ -328,7 +328,7 @@ function AdminPage() {
               </Button>
             </form>
 
-            <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
+            <div className="space-y-3 card-soft p-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <KeyRound className="size-4 text-primary" /> تغيير كلمة مروري
               </div>
@@ -357,7 +357,7 @@ function AdminPage() {
               </Button>
             </div>
 
-            <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
+            <div className="space-y-3 card-soft p-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <Link2 className="size-4 text-primary" /> روابط الدعوة
               </div>
