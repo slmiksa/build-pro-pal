@@ -228,11 +228,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const membersByConv = new Map<string, string[]>();
       const lastReadFor = new Map<string, number>();
+      const pinnedFor = new Set<string>();
       for (const m of memberRes.data ?? []) {
         const list = membersByConv.get(m.conversation_id) ?? [];
         list.push(m.user_id);
         membersByConv.set(m.conversation_id, list);
-        if (m.user_id === me) lastReadFor.set(m.conversation_id, ms(m.last_read_at));
+        if (m.user_id === me) {
+          lastReadFor.set(m.conversation_id, ms(m.last_read_at));
+          if ((m as { pinned?: boolean }).pinned) pinnedFor.add(m.conversation_id);
+        }
       }
 
       const readsByMessage = new Map<string, string[]>();
