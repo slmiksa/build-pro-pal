@@ -80,11 +80,9 @@ export function useScreenGuard(options: {
     }
 
     return () => {
-      window.removeEventListener("blur", onBlur);
-      document.removeEventListener("visibilitychange", onVisibility);
-      document.removeEventListener("mouseleave", onPointerLeave);
+      window.removeEventListener("blur", onMobileCapture);
       window.removeEventListener("keydown", onKey, true);
-      window.removeEventListener("keyup", onKey, true);
+      window.removeEventListener("keyup", onKeyUp, true);
       document.removeEventListener("contextmenu", onContext);
       if (md && original) md.getDisplayMedia = original;
     };
