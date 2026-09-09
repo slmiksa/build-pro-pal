@@ -94,22 +94,23 @@ export function AppShell({
         <main
           className={cn(
             "min-h-0 flex-1",
-            padded ? "overflow-x-hidden overflow-y-auto px-6 pt-4 pb-4" : "flex flex-col overflow-hidden",
+            padded ? "overflow-x-hidden overflow-y-auto px-5 pt-3 pb-4" : "flex flex-col overflow-hidden",
           )}
         >
           {children}
         </main>
 
         {!hideTabs && (
-          <nav className="pb-safe shrink-0 bg-background px-6 pt-2">
-            <div className="grid grid-cols-3 rounded-[26px] bg-surface-2 p-1.5">
+          <nav className="pb-safe shrink-0 bg-background px-5 pt-2">
+            <div className="grid grid-cols-3 rounded-[24px] bg-surface-2/90 p-1">
               {tabs.map((t) => (
                 <Link
                   key={t.to}
                   to={t.to}
-                  className="flex flex-col items-center gap-1 rounded-[20px] py-2 text-[10px] font-medium text-muted-foreground transition-all active:scale-95"
+                  className="flex flex-col items-center gap-1 rounded-[20px] py-2.5 text-[10.5px] font-medium text-muted-foreground transition-all active:scale-95"
                   activeProps={{
-                    className: "bg-background text-primary shadow-sm font-semibold",
+                    className:
+                      "bg-background text-primary font-semibold shadow-[0_6px_16px_-8px_rgba(14,21,18,0.35)]",
                   }}
                 >
                   <t.icon className="size-5" />
