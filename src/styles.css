@@ -183,6 +183,21 @@ html[data-keyboard-open] .pb-safe {
   overflow: hidden;
 }
 
+/* Installed app (PWA / WebView): fill the whole screen and keep the tab bar
+   glued to the bottom edge — only the home-indicator inset is reserved. */
+@media all and (display-mode: standalone) {
+  html:not([data-keyboard-open]) .app-viewport {
+    top: 0;
+    height: 100vh;
+    max-height: 100vh;
+  }
+
+  .pb-safe {
+    padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) - 14px), 0px);
+  }
+}
+
+
 /* Soft elevated card used across the app surfaces. */
 @utility card-soft {
   background-color: var(--surface);
