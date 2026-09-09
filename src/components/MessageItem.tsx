@@ -8,10 +8,17 @@ import {
   FileText,
   Image as ImageIcon,
   Mic,
+  MoreHorizontal,
   Play,
   Timer,
   Trash2,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { PolicyBadges } from "@/components/PolicyBadges";
 import { countdown, formatTime, initials } from "@/lib/format";
@@ -210,25 +217,45 @@ export function MessageItem({
           </div>
         </div>
 
-        <div className="mt-1 flex items-center justify-end gap-3 pe-1">
-          {message.policy.allowForward && onForward && (
-            <button
-              type="button"
-              onClick={() => onForward(message)}
-              className="flex items-center gap-1 text-[10px] text-muted-foreground transition-opacity active:opacity-60"
-            >
-              <Forward className="size-3" /> إعادة توجيه
-            </button>
-          )}
-        </div>
-        {mine && (
-          <button
-            type="button"
-            onClick={() => revokeMessage(message.id)}
-            className="mt-1 flex w-full items-center justify-end gap-1 pe-1 text-[10px] text-muted-foreground transition-opacity active:opacity-60"
+        {(mine || (message.policy.allowForward && onForward)) && (
+          <div
+            className={cn(
+              "mt-1 flex",
+              mine ? "justify-end" : "justify-start",
+            )}
           >
-            <Trash2 className="size-3" /> سحب للجميع
-          </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="خيارات الرسالة"
+                  className="flex items-center gap-1 rounded-full bg-surface-2 px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-opacity active:opacity-60"
+                >
+                  <MoreHorizontal className="size-3.5" /> خيارات
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align={mine ? "end" : "start"} className="min-w-44">
+                {message.policy.allowForward && onForward && (
+                  <DropdownMenuItem onSelect={() => onForward(message)}>
+                    <Forward className="size-4" /> إعادة توجيه
+                  </DropdownMenuItem>
+                )}
+                {message.attachment && (
+                  <DropdownMenuItem onSelect={() => onOpen(message)}>
+                    <ImageIcon className="size-4" /> فتح المرفق
+                  </DropdownMenuItem>
+                )}
+                {mine && (
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => revokeMessage(message.id)}
+                  >
+                    <Trash2 className="size-4" /> سحب للجميع
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
     </div>
