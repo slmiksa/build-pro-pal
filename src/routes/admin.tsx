@@ -43,6 +43,10 @@ function AdminPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
+  const [memberPassword, setMemberPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [domainsInput, setDomainsInput] = useState("");
@@ -76,6 +80,10 @@ function AdminPage() {
       toast.error("الاسم والبريد مطلوبان");
       return;
     }
+    if (memberPassword.trim().length < 8) {
+      toast.error("كلمة المرور يجب ألا تقل عن 8 أحرف");
+      return;
+    }
     if (!domainAllowed(email)) {
       toast.error(`يجب أن يكون البريد على أحد النطاقات: ${domainsText}`);
       return;
@@ -85,6 +93,7 @@ function AdminPage() {
       name: name.trim(),
       email: email.trim(),
       title: title.trim() || "مدير",
+      password: memberPassword,
     });
     setBusy(false);
     if (res.error) {
@@ -92,12 +101,13 @@ function AdminPage() {
       return;
     }
     toast.success("تمت إضافة العضو", {
-      description: `كلمة المرور المؤقتة: ${res.password}`,
-      duration: 15000,
+      description: "يمكنه الدخول بالبريد وكلمة المرور التي حددتها، وتغييرها لاحقاً.",
+      duration: 8000,
     });
     setName("");
     setEmail("");
     setTitle("");
+    setMemberPassword("");
   };
 
   const makeInvite = async () => {
@@ -114,6 +124,27 @@ function AdminPage() {
     toast.success("تم إنشاء رابط الدعوة", { description: inv.code });
   };
 
+
+  const changeOwnPassword = async () => {
+    if (newPassword.length < 8) {
+      toast.error("كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف");
+      return;
+    }
+    setPwBusy(true);
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+      ...(currentPassword ? { current_password: currentPassword } : {}),
+    } as { password: string });
+    setPwBusy(false);
+    if (error) {
+      toast.error("تعذّر تغيير كلمة المرور");
+      return;
+    }
+    setCurrentPassword("");
+    setNewPassword("");
+    toast.success("تم تغيير كلمة المرور");
+  };
 
   const sendReset = async (memberEmail: string) => {
     const error = await resetMemberPassword(memberEmail);
@@ -248,6 +279,20 @@ function AdminPage() {
                 />
               </div>
               <div className="space-y-1.5">
+                <Label htmlFor="p">كلمة المرور</Label>
+                <Input
+                  id="p"
+                  dir="ltr"
+                  type="text"
+                  value={memberPassword}
+                  onChange={(e) => setMemberPassword(e.target.value)}
+                  placeholder="8 أحرف على الأقل"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  يدخل بها العضو أول مرة، ويستطيع تغييرها بنفسه لاحقاً.
+                </p>
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="t">المسمى الوظيفي</Label>
                 <Input id="t" value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
@@ -255,6 +300,35 @@ function AdminPage() {
                 إضافة
               </Button>
             </form>
+
+            <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <KeyRound className="size-4 text-primary" /> تغيير كلمة مروري
+              </div>
+              <Input
+                dir="ltr"
+                type="password"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="كلمة المرور الحالية"
+              />
+              <Input
+                dir="ltr"
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="كلمة المرور الجديدة"
+              />
+              <Button
+                className="w-full"
+                onClick={() => void changeOwnPassword()}
+                disabled={pwBusy}
+              >
+                حفظ كلمة المرور
+              </Button>
+            </div>
 
             <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
