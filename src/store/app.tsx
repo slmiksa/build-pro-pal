@@ -154,8 +154,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const loadingRef = useRef(false);
   const messagesRef = useRef<Message[]>([]);
   const currentUserRef = useRef<UserId | null>(null);
+  const conversationsRef = useRef<Conversation[]>([]);
+  const usersRef = useRef<User[]>([]);
   messagesRef.current = messages;
   currentUserRef.current = currentUserId;
+  conversationsRef.current = conversations;
+  usersRef.current = users;
 
 
   /* ---------- session ---------- */
