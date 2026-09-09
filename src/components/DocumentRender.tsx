@@ -41,7 +41,9 @@ export function DocumentRender({
           }));
           if (!cancelled) setSheets(out);
         } else {
-          const mammoth = await import("mammoth/mammoth.browser");
+          const mammoth = await import(
+            /* @vite-ignore */ "mammoth/mammoth.browser.js"
+          );
           const res = await (
             mammoth as unknown as {
               convertToHtml: (i: {
