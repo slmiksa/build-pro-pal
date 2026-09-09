@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 type Sheet = { name: string; html: string };
@@ -15,21 +15,22 @@ export function DocumentRender({
   kind: "spreadsheet" | "word";
 }) {
   const [sheets, setSheets] = useState<Sheet[] | null>(null);
-  const [docHtml, setDocHtml] = useState<string | null>(null);
+  const [wordReady, setWordReady] = useState(false);
   const [active, setActive] = useState(0);
   const [failed, setFailed] = useState(false);
+  const wordRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setSheets(null);
-    setDocHtml(null);
+    setWordReady(false);
     setFailed(false);
     setActive(0);
 
     const run = async () => {
       try {
-        const buffer = await blob.arrayBuffer();
         if (kind === "spreadsheet") {
+          const buffer = await blob.arrayBuffer();
           const XLSX = await import("xlsx");
           const wb = XLSX.read(buffer, { type: "array" });
           const out: Sheet[] = wb.SheetNames.map((name) => ({
@@ -40,19 +41,25 @@ export function DocumentRender({
             }),
           }));
           if (!cancelled) setSheets(out);
-        } else {
-          const mammoth = await import(
-            /* @vite-ignore */ "mammoth/mammoth.browser.js"
-          );
-          const res = await (
-            mammoth as unknown as {
-              convertToHtml: (i: {
-                arrayBuffer: ArrayBuffer;
-              }) => Promise<{ value: string }>;
-            }
-          ).convertToHtml({ arrayBuffer: buffer });
-          if (!cancelled) setDocHtml(res.value);
+          return;
         }
+
+        const { renderAsync } = await import("docx-preview");
+        // Wait a tick so the target container exists in the DOM.
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
+        const host = wordRef.current;
+        if (cancelled || !host) return;
+        host.innerHTML = "";
+        await renderAsync(blob, host, undefined, {
+          className: "docx",
+          inWrapper: true,
+          ignoreWidth: true,
+          ignoreHeight: true,
+          breakPages: false,
+          experimental: true,
+          useBase64URL: true,
+        });
+        if (!cancelled) setWordReady(true);
       } catch {
         if (!cancelled) setFailed(true);
       }
@@ -71,7 +78,26 @@ export function DocumentRender({
       </div>
     );
 
-  if (!sheets && !docHtml)
+  if (kind === "word")
+    return (
+      <div className="space-y-3">
+        {!wordReady && (
+          <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
+            <Loader2 className="size-6 animate-spin" />
+            <p className="text-sm">جارٍ تجهيز الملف للعرض…</p>
+          </div>
+        )}
+        <div
+          ref={wordRef}
+          dir="auto"
+          className={`doc-view overflow-auto rounded-xl border border-border bg-surface p-3 shadow-sm ${
+            wordReady ? "" : "hidden"
+          }`}
+        />
+      </div>
+    );
+
+  if (!sheets)
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
         <Loader2 className="size-6 animate-spin" />
@@ -79,20 +105,11 @@ export function DocumentRender({
       </div>
     );
 
-  if (docHtml !== null)
-    return (
-      <article
-        dir="auto"
-        className="doc-view rounded-xl border border-border bg-surface p-6 text-[14px] leading-8 shadow-sm"
-        dangerouslySetInnerHTML={{ __html: docHtml }}
-      />
-    );
-
   return (
     <div className="space-y-3">
-      {sheets!.length > 1 && (
+      {sheets.length > 1 && (
         <div className="flex flex-wrap gap-1.5">
-          {sheets!.map((s, i) => (
+          {sheets.map((s, i) => (
             <button
               key={s.name}
               type="button"
@@ -111,7 +128,7 @@ export function DocumentRender({
       <div
         dir="ltr"
         className="sheet-view overflow-auto rounded-xl border border-border bg-surface p-2 shadow-sm"
-        dangerouslySetInnerHTML={{ __html: sheets![active]?.html ?? "" }}
+        dangerouslySetInnerHTML={{ __html: sheets[active]?.html ?? "" }}
       />
     </div>
   );
