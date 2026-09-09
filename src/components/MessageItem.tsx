@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Ban,
   Check,
+  Forward,
   CheckCheck,
   FileSpreadsheet,
   FileText,
@@ -30,10 +31,12 @@ export function MessageItem({
   message,
   showSender,
   onOpen,
+  onForward,
 }: {
   message: Message;
   showSender: boolean;
   onOpen: (m: Message) => void;
+  onForward?: ((m: Message) => void) | undefined;
 }) {
   const { currentUserId, userById, revokeMessage, log } = useApp();
   const mine = message.senderId === currentUserId;
@@ -102,8 +105,29 @@ export function MessageItem({
               : "rounded-2xl rounded-tr-md bg-bubble-in text-bubble-in-foreground",
           )}
         >
+          {message.forwardedFrom && (
+            <span className="mb-1 flex items-center gap-1 text-[10px] opacity-70">
+              <Forward className="size-3" /> رسالة معاد توجيهها
+            </span>
+          )}
           {message.text && (
-            <p className="whitespace-pre-wrap font-medium">{message.text}</p>
+            <p className="whitespace-pre-wrap font-medium">
+              {message.text.split(/(@[^\s@]+(?:\s[^\s@]+)?)/g).map((part, i) =>
+                part.startsWith("@") && message.mentions.length > 0 ? (
+                  <span
+                    key={i}
+                    className={cn(
+                      "rounded px-1 font-semibold",
+                      mine ? "bg-white/20" : "bg-primary/10 text-primary",
+                    )}
+                  >
+                    {part}
+                  </span>
+                ) : (
+                  <span key={i}>{part}</span>
+                ),
+              )}
+            </p>
           )}
 
           {message.attachment && Icon && (
@@ -186,6 +210,17 @@ export function MessageItem({
           </div>
         </div>
 
+        <div className="mt-1 flex items-center justify-end gap-3 pe-1">
+          {message.policy.allowForward && onForward && (
+            <button
+              type="button"
+              onClick={() => onForward(message)}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground transition-opacity active:opacity-60"
+            >
+              <Forward className="size-3" /> إعادة توجيه
+            </button>
+          )}
+        </div>
         {mine && (
           <button
             type="button"
