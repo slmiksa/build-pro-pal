@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, EyeOff, Lock, ShieldAlert, X } from "lucide-react";
+import { AlertTriangle, EyeOff, FileWarning, Loader2, Lock, ShieldAlert, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Watermark } from "@/components/Watermark";
