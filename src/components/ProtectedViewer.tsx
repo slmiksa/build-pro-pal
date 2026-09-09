@@ -109,6 +109,16 @@ export function ProtectedViewer({
   const isPdf = att.kind === "pdf" || type === "application/pdf";
   const isAudio = att.kind === "audio" || type.startsWith("audio/");
   const isVideo = type.startsWith("video/");
+  const lowerName = att.name.toLowerCase();
+  const isSheet =
+    /\.(xlsx|xlsm|xls|csv)$/.test(lowerName) ||
+    type.includes("spreadsheet") ||
+    type.includes("excel") ||
+    type === "text/csv";
+  const isWord =
+    /\.(docx)$/.test(lowerName) ||
+    type.includes("wordprocessingml") ||
+    type === "application/msword";
 
   const tryDownload = async () => {
     if (!policy.allowDownload) {
