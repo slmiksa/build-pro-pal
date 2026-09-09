@@ -97,6 +97,8 @@ type Ctx = {
   revokeMessage: (id: string) => Promise<void>;
   markRead: (conversationId: string) => Promise<void>;
   registerOpen: (messageId: string) => Promise<"ok" | "limit">;
+  /** Fetches the real file bytes from private storage. */
+  fetchAttachment: (path: string) => Promise<Blob | null>;
   log: (
     type: AuditType,
     detail: string,
@@ -266,6 +268,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
               name: raw.name,
               size: raw.size,
               src: raw.path ? signed.get(raw.path) : raw.src,
+              path: raw.path,
+              mime: raw.mime,
               pages: raw.pages,
               durationSec: raw.durationSec,
             }
@@ -701,6 +705,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [messages, log, refresh],
   );
 
+  const fetchAttachment = useCallback<Ctx["fetchAttachment"]>(async (path) => {
+    const { data, error } = await supabase.storage.from(BUCKET).download(path);
+    if (error || !data) return null;
+    return data;
+  }, []);
+
   const addMember = useCallback<Ctx["addMember"]>(async ({ name, email, title, password }) => {
     const { createMember } = await import("@/lib/members.functions");
     try {
@@ -822,6 +832,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       revokeMessage,
       markRead,
       registerOpen,
+      fetchAttachment,
       log,
       addMember,
       resetMemberPassword,
@@ -856,6 +867,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       revokeMessage,
       markRead,
       registerOpen,
+      fetchAttachment,
       log,
       addMember,
       resetMemberPassword,

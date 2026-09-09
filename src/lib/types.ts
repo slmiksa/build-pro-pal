@@ -22,6 +22,10 @@ export type Attachment = {
   size: string;
   /** For images: a data/asset URL. For docs: rendered as synthetic pages. */
   src?: string | undefined;
+  /** Storage object path inside the private attachments bucket. */
+  path?: string | undefined;
+  /** MIME type of the stored file. */
+  mime?: string | undefined;
   pages?: string[] | undefined;
   durationSec?: number | undefined;
 };
