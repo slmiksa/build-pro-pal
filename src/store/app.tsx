@@ -96,6 +96,7 @@ type Ctx = {
   }) => Promise<void>;
   revokeMessage: (id: string) => Promise<void>;
   markRead: (conversationId: string) => Promise<void>;
+  togglePinned: (conversationId: string) => Promise<void>;
   registerOpen: (messageId: string) => Promise<"ok" | "limit">;
   /** Fetches the real file bytes from private storage. */
   fetchAttachment: (path: string) => Promise<Blob | null>;
