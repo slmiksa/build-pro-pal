@@ -244,7 +244,7 @@ function AdminPage() {
                   dir="ltr"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={`name@${COMPANY_DOMAIN}`}
+                  placeholder={`name@${allowedDomains[0] ?? "example.com"}`}
                 />
               </div>
               <div className="space-y-1.5">
@@ -266,7 +266,7 @@ function AdminPage() {
                   dir="ltr"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder={`name@${COMPANY_DOMAIN}`}
+                  placeholder={`name@${allowedDomains[0] ?? "example.com"}`}
                 />
                 <Button onClick={makeInvite}>إنشاء</Button>
               </div>
