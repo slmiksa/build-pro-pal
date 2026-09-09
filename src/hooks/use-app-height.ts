@@ -15,19 +15,26 @@ export function useAppHeight() {
     const apply = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-      const h = vv?.height ?? window.innerHeight;
-      largestHeight = Math.max(largestHeight, window.innerHeight, h);
-      document.documentElement.style.setProperty("--app-h", `${h}px`);
-      document.documentElement.style.setProperty(
-        "--app-top",
-        `${Math.max(0, vv?.offsetTop ?? 0)}px`,
-      );
-      document.documentElement.toggleAttribute(
-        "data-keyboard-open",
-        largestHeight - h > 120,
-      );
+        const vh = vv?.height ?? window.innerHeight;
+        const layout = window.innerHeight;
+        largestHeight = Math.max(largestHeight, layout, vh);
+        // The keyboard is open only when the visual viewport shrinks a lot.
+        const keyboardOpen = largestHeight - vh > 120;
+        // Otherwise always fill the real screen height so no dead space is left
+        // under the tab bar inside a WebView.
+        const h = keyboardOpen ? vh : Math.max(layout, vh);
+        document.documentElement.style.setProperty("--app-h", `${h}px`);
+        document.documentElement.style.setProperty(
+          "--app-top",
+          `${keyboardOpen ? Math.max(0, vv?.offsetTop ?? 0) : 0}px`,
+        );
+        document.documentElement.toggleAttribute(
+          "data-keyboard-open",
+          keyboardOpen,
+        );
       });
     };
+
 
     apply();
     vv?.addEventListener("resize", apply);
