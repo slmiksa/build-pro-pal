@@ -31,12 +31,6 @@ export function useScreenGuard(options: {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
 
-    const onBlur = () => setMasked(true);
-    const onVisibility = () => {
-      if (document.visibilityState === "hidden") trigger("مغادرة النافذة");
-    };
-    const onPointerLeave = () => setMasked(true);
-
     // Mask on key DOWN of any modifier that can begin a capture shortcut,
     // before the full combination is completed.
     const onKey = (e: KeyboardEvent) => {
