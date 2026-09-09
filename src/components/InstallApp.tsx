@@ -7,6 +7,7 @@ import {
   Smartphone,
   SquarePlus,
 } from "lucide-react";
+import { NotificationsCard } from "@/components/NotificationsPrompt";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -75,8 +76,11 @@ export function InstallAppContent() {
 
   if (installed) {
     return (
-      <div className="rounded-2xl bg-primary/10 p-4 text-center text-[13px] font-semibold text-primary">
-        التطبيق مثبّت على جهازك بالفعل
+      <div className="space-y-4">
+        <div className="rounded-2xl bg-primary/10 p-4 text-center text-[13px] font-semibold text-primary">
+          التطبيق مثبّت على جهازك بالفعل
+        </div>
+        <NotificationsCard />
       </div>
     );
   }
@@ -135,6 +139,8 @@ export function InstallAppContent() {
           <Step n={4}>اضغط «إضافة» وستظهر الأيقونة على شاشتك.</Step>
         </ol>
       </div>
+
+      <NotificationsCard />
 
       <p className="text-center text-[11px] text-muted-foreground">
         بعد التثبيت يفتح التطبيق بملء الشاشة مثل أي تطبيق على جهازك.

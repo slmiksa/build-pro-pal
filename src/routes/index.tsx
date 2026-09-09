@@ -36,14 +36,11 @@ const highlights = [
 ];
 
 function LoginPage() {
-  const { signIn, signUp, currentUserId, ready } = useApp();
+  const { signIn, currentUserId, ready } = useApp();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"welcome" | "signin" | "signup">(
-    "welcome",
-  );
+  const [mode, setMode] = useState<"welcome" | "signin">("welcome");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -54,43 +51,12 @@ function LoginPage() {
     e.preventDefault();
     if (busy) return;
 
-
     if (!email.trim() || !password.trim()) {
       toast.error("أدخل البريد وكلمة المرور");
       return;
     }
 
     setBusy(true);
-    if (mode === "signup") {
-      if (!name.trim()) {
-        setBusy(false);
-        { toast.error("أدخل الاسم الكامل"); return; }
-      }
-      if (password.length < 8) {
-        setBusy(false);
-        { toast.error("كلمة المرور يجب ألا تقل عن 8 أحرف"); return; }
-      }
-      const res = await signUp({ email: email.trim(), password, name: name.trim() });
-      if (res.error) {
-        setBusy(false);
-        toast.error(
-          res.error.includes("already")
-            ? "هذا البريد مسجّل مسبقاً"
-            : "تعذّر إنشاء الحساب",
-        );
-        return;
-      }
-      if (res.needsConfirmation) {
-        setBusy(false);
-        toast.success("أرسلنا رسالة تأكيد إلى بريدك، فعّل الحساب ثم سجّل الدخول");
-        setMode("signin");
-        return;
-      }
-      setBusy(false);
-      navigate({ to: "/chat" });
-      return;
-    }
-
     const error = await signIn(email.trim(), password);
     setBusy(false);
     if (error) { toast.error(error); return; }
@@ -147,13 +113,9 @@ function LoginPage() {
               >
                 تسجيل الدخول
               </Button>
-              <Button
-                variant="secondary"
-                className="h-14 w-full rounded-2xl text-base font-bold shadow-none"
-                onClick={() => setMode("signup")}
-              >
-                إنشاء حساب جديد
-              </Button>
+              <p className="pt-1 text-center text-xs text-muted-foreground">
+                الحسابات يُنشئها مسؤول الشركة فقط.
+              </p>
               <InstallAppDialog
                 trigger={
                   <Button
@@ -167,19 +129,6 @@ function LoginPage() {
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-4 rounded-3xl bg-surface-2 p-5">
-              {mode === "signup" ? (
-                <div className="space-y-1.5 text-start">
-                  <Label htmlFor="name">الاسم الكامل</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="مثال: سالم العتيبي"
-                    className="h-13 rounded-2xl border-border bg-surface shadow-none"
-                  />
-                </div>
-              ) : null}
-
               <div className="space-y-1.5 text-start">
                 <Label htmlFor="email">البريد الرسمي</Label>
                 <Input
@@ -193,33 +142,29 @@ function LoginPage() {
                 />
               </div>
 
-              {(
-                <div className="space-y-1.5 text-start">
-                  <Label htmlFor="password">كلمة المرور</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    dir="ltr"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-13 rounded-2xl border-border bg-surface shadow-none"
-                  />
-                </div>
-              )}
+              <div className="space-y-1.5 text-start">
+                <Label htmlFor="password">كلمة المرور</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  dir="ltr"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-13 rounded-2xl border-border bg-surface shadow-none"
+                />
+              </div>
 
               <Button
                 type="submit"
                 disabled={busy}
                 className="h-14 w-full rounded-2xl text-base font-semibold"
               >
-                {mode === "signup" ? "إنشاء الحساب" : "دخول آمن"}
+                دخول آمن
               </Button>
 
-              {mode === "signin" ? (
-                <p className="w-full text-center text-xs text-muted-foreground">
-                  نسيت كلمة المرور؟ تواصل مع مسؤول الشركة ليضبطها لك مباشرة.
-                </p>
-              ) : null}
+              <p className="w-full text-center text-xs text-muted-foreground">
+                نسيت كلمة المرور؟ تواصل مع مسؤول الشركة ليضبطها لك مباشرة.
+              </p>
 
               <Button
                 type="button"
