@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import logo from "@/assets/logo.png";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -159,7 +159,7 @@ export function InstallAppDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-sm rounded-3xl">
         <DialogHeader className="items-center text-center">
-          <img src={logo} alt="شعار درع" className="size-14 rounded-2xl" />
+          <img src={logoAsset.url} alt="شعار درع" className="size-14 rounded-2xl" />
           <DialogTitle className="font-display text-lg">
             تثبيت تطبيق درع
           </DialogTitle>
