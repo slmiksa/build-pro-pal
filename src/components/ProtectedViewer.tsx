@@ -237,14 +237,26 @@ export function ProtectedViewer({
                   className="w-full rounded-xl border border-border"
                 />
               )}
-              {textBody !== null && (
+              {blob && (isSheet || isWord) && (
+                <DocumentRender
+                  blob={blob}
+                  kind={isSheet ? "spreadsheet" : "word"}
+                />
+              )}
+              {textBody !== null && !isSheet && !isWord && (
                 <article className="rounded-xl border border-border bg-surface p-6 shadow-sm">
                   <pre className="whitespace-pre-wrap text-[14px] leading-7">
                     {textBody}
                   </pre>
                 </article>
               )}
-              {!isImage && !isPdf && !isAudio && !isVideo && textBody === null && (
+              {!isImage &&
+                !isPdf &&
+                !isAudio &&
+                !isVideo &&
+                !isSheet &&
+                !isWord &&
+                textBody === null && (
                 <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface p-10 text-center">
                   <FileWarning className="size-7 text-primary" />
                   <p className="text-sm font-semibold">
