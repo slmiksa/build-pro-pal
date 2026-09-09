@@ -138,6 +138,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [invites, setInvites] = useState<Invite[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const loadingRef = useRef(false);
+  const messagesRef = useRef<Message[]>([]);
+  const currentUserRef = useRef<UserId | null>(null);
+  messagesRef.current = messages;
+  currentUserRef.current = currentUserId;
+
 
   /* ---------- session ---------- */
   useEffect(() => {
@@ -631,34 +636,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [log, refresh],
   );
 
+  // Stable identity: reads live message state from a ref so marking a thread
+  // read can never re-trigger the effect that called it (refresh -> new
+  // messages -> new callback -> mark again -> infinite loop / frozen tab).
   const markRead = useCallback<Ctx["markRead"]>(
     async (conversationId) => {
-      if (!currentUserId) return;
+      const me = currentUserRef.current;
+      if (!me) return;
+      const unreadIds = messagesRef.current
+        .filter(
+          (m) => m.conversationId === conversationId && !m.readBy.includes(me),
+        )
+        .map((m) => m.id);
+
+      setConversations((prev) =>
+        prev.map((c) => (c.id === conversationId ? { ...c, unread: 0 } : c)),
+      );
+
       await supabase
         .from("conversation_members")
         .update({ last_read_at: new Date().toISOString() })
         .eq("conversation_id", conversationId)
-        .eq("user_id", currentUserId);
+        .eq("user_id", me);
 
-      const unreadIds = messages
-        .filter(
-          (m) => m.conversationId === conversationId && !m.readBy.includes(currentUserId),
-        )
-        .map((m) => m.id);
       if (unreadIds.length) {
         await supabase
           .from("message_reads")
           .upsert(
-            unreadIds.map((id) => ({ message_id: id, user_id: currentUserId })),
+            unreadIds.map((id) => ({ message_id: id, user_id: me })),
             { onConflict: "message_id,user_id", ignoreDuplicates: true },
           );
       }
-      setConversations((prev) =>
-        prev.map((c) => (c.id === conversationId ? { ...c, unread: 0 } : c)),
-      );
     },
-    [currentUserId, messages],
+    [],
   );
+
 
   const registerOpen = useCallback<Ctx["registerOpen"]>(
     async (messageId) => {
