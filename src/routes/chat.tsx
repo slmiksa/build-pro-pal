@@ -104,14 +104,32 @@ function ChatPage() {
     return el.scrollHeight - el.scrollTop - el.clientHeight < 140;
   };
 
+  const jumpToEnd = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+    endRef.current?.scrollIntoView({ block: "end" });
+  };
+
   useEffect(() => {
     if (prevConvRef.current !== activeId) {
       prevConvRef.current = activeId;
-      endRef.current?.scrollIntoView({ block: "end" });
-      return;
+      // Content (images/attachments) can grow after mount, so pin to the bottom
+      // a few times right after opening a conversation.
+      jumpToEnd();
+      const r = requestAnimationFrame(jumpToEnd);
+      const t1 = window.setTimeout(jumpToEnd, 60);
+      const t2 = window.setTimeout(jumpToEnd, 250);
+      const t3 = window.setTimeout(jumpToEnd, 600);
+      return () => {
+        cancelAnimationFrame(r);
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+        window.clearTimeout(t3);
+      };
     }
-    if (nearBottom()) endRef.current?.scrollIntoView({ block: "end" });
+    if (nearBottom()) jumpToEnd();
   }, [thread.length, activeId]);
+
 
   // Keep the newest message visible when the on-screen keyboard opens/closes.
   useEffect(() => {
