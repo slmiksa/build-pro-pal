@@ -304,24 +304,61 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       setMessages(mapped);
 
-      setConversations(
-        (convRes.data ?? []).map((c) => {
-          const lastRead = lastReadFor.get(c.id) ?? 0;
-          const unread = mapped.filter(
-            (m) =>
-              m.conversationId === c.id &&
-              m.senderId !== me &&
-              m.createdAt > lastRead,
-          ).length;
-          return {
-            id: c.id,
-            kind: c.kind,
-            name: c.name ?? undefined,
-            memberIds: membersByConv.get(c.id) ?? [],
-            unread,
-          };
-        }),
-      );
+      const allConversations = (convRes.data ?? []).map((c) => {
+        const lastRead = lastReadFor.get(c.id) ?? 0;
+        const unread = mapped.filter(
+          (m) =>
+            m.conversationId === c.id &&
+            m.senderId !== me &&
+            m.createdAt > lastRead,
+        ).length;
+        return {
+          id: c.id,
+          kind: c.kind,
+          name: c.name ?? undefined,
+          memberIds: membersByConv.get(c.id) ?? [],
+          unread,
+          pinned: pinnedFor.has(c.id),
+        };
+      });
+
+      // Collapse duplicate one-to-one chats with the same person into the
+      // conversation that actually holds the history.
+      const activityOf = (id: string) => {
+        const list = mapped.filter((m) => m.conversationId === id);
+        return {
+          count: list.length,
+          last: list.length ? (list[list.length - 1]?.createdAt ?? 0) : 0,
+        };
+      };
+      const byPeer = new Map<string, (typeof allConversations)[number]>();
+      const deduped: typeof allConversations = [];
+      for (const c of allConversations) {
+        const peer =
+          c.kind === "direct"
+            ? c.memberIds.filter((id) => id !== me).sort().join(",")
+            : null;
+        if (!peer) {
+          deduped.push(c);
+          continue;
+        }
+        const kept = byPeer.get(peer);
+        if (!kept) {
+          byPeer.set(peer, c);
+          continue;
+        }
+        const a = activityOf(kept.id);
+        const b = activityOf(c.id);
+        const winner =
+          b.count > a.count || (b.count === a.count && b.last > a.last) ? c : kept;
+        const loser = winner === c ? kept : c;
+        byPeer.set(peer, {
+          ...winner,
+          unread: Math.max(winner.unread, loser.unread),
+          pinned: winner.pinned || loser.pinned,
+        });
+      }
+      setConversations([...deduped, ...byPeer.values()]);
 
       setAudit(
         (auditRes.data ?? []).map((e) => ({
