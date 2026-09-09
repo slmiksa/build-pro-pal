@@ -54,6 +54,8 @@ type Ctx = {
   messages: Message[];
   audit: AuditEvent[];
   invites: Invite[];
+  allowedDomains: string[];
+  setAllowedDomains: (domains: string[]) => Promise<string | null>;
   currentUserId: UserId | null;
   currentUser: User | null;
   isAdmin: boolean;
@@ -136,6 +138,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [audit, setAudit] = useState<AuditEvent[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
+  const [allowedDomains, setAllowedDomainsState] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const loadingRef = useRef(false);
   const messagesRef = useRef<Message[]>([]);
@@ -187,6 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         readsRes,
         auditRes,
         invitesRes,
+        settingsRes,
       ] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at"),
         supabase.from("user_roles").select("user_id, role"),
@@ -196,6 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         supabase.from("message_reads").select("message_id, user_id"),
         supabase.from("audit_events").select("*").order("at", { ascending: false }).limit(500),
         supabase.from("invites").select("*").order("created_at", { ascending: false }),
+        supabase.from("org_settings").select("allowed_domains").limit(1).maybeSingle(),
       ]);
 
       const roleByUser = new Map<string, "admin" | "manager">();
@@ -331,6 +336,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           used: i.used,
         })),
       );
+
+      setAllowedDomainsState(settingsRes.data?.allowed_domains ?? []);
     } finally {
       loadingRef.current = false;
       setLoading(false);
@@ -728,6 +735,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [users, log, refresh],
   );
 
+  const setAllowedDomains = useCallback<Ctx["setAllowedDomains"]>(
+    async (domains) => {
+      const clean = Array.from(
+        new Set(
+          domains
+            .map((d) => d.trim().toLowerCase().replace(/^@+/, ""))
+            .filter(Boolean),
+        ),
+      );
+      const { data: row } = await supabase
+        .from("org_settings")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+      const { error } = row
+        ? await supabase
+            .from("org_settings")
+            .update({ allowed_domains: clean })
+            .eq("id", row.id)
+        : await supabase
+            .from("org_settings")
+            .insert({ allowed_domains: clean });
+      if (error) return error.message;
+      setAllowedDomainsState(clean);
+      return null;
+    },
+    [],
+  );
+
   const createInvite = useCallback<Ctx["createInvite"]>(
     async (email) => {
       if (!currentUserId) return null;
@@ -765,6 +801,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       messages,
       audit,
       invites,
+      allowedDomains,
+      setAllowedDomains,
       currentUserId,
       currentUser,
       isAdmin,
@@ -797,6 +835,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       messages,
       audit,
       invites,
+      allowedDomains,
+      setAllowedDomains,
       currentUserId,
       currentUser,
       isAdmin,

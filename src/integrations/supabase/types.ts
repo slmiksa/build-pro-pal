@@ -249,6 +249,33 @@ export type Database = {
           },
         ]
       }
+      org_settings: {
+        Row: {
+          allowed_domains: string[]
+          created_at: string
+          id: string
+          org_name: string
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          allowed_domains?: string[]
+          created_at?: string
+          id?: string
+          org_name?: string
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          allowed_domains?: string[]
+          created_at?: string
+          id?: string
+          org_name?: string
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           color: string

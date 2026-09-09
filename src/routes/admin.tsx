@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Copy, KeyRound, Link2, Power, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Copy, Globe, KeyRound, Link2, Power, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { COMPANY_DOMAIN } from "@/data/seed";
 import { formatDateTime, initials } from "@/lib/format";
 import { useApp } from "@/store/app";
 
@@ -38,12 +37,37 @@ function AdminPage() {
     toggleMemberDisabled,
     createInvite,
     resetMemberPassword,
+    allowedDomains,
+    setAllowedDomains,
   } = useApp();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [busy, setBusy] = useState(false);
+  const [domainsInput, setDomainsInput] = useState("");
+  const [domainsBusy, setDomainsBusy] = useState(false);
+  const domainsText = allowedDomains.join("، ");
+
+  useEffect(() => {
+    setDomainsInput(allowedDomains.join(", "));
+  }, [allowedDomains]);
+
+  const domainAllowed = (value: string) => {
+    if (allowedDomains.length === 0) return true;
+    const at = value.trim().toLowerCase().split("@")[1] ?? "";
+    return allowedDomains.includes(at);
+  };
+
+  const saveDomains = async () => {
+    setDomainsBusy(true);
+    const err = await setAllowedDomains(
+      domainsInput.split(/[,،\s]+/).filter(Boolean),
+    );
+    setDomainsBusy(false);
+    if (err) toast.error("تعذّر حفظ النطاقات");
+    else toast.success("تم حفظ النطاقات المسموح بها");
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,8 +76,8 @@ function AdminPage() {
       toast.error("الاسم والبريد مطلوبان");
       return;
     }
-    if (!email.trim().endsWith(`@${COMPANY_DOMAIN}`)) {
-      toast.error(`يجب أن يكون البريد على نطاق @${COMPANY_DOMAIN}`);
+    if (!domainAllowed(email)) {
+      toast.error(`يجب أن يكون البريد على أحد النطاقات: ${domainsText}`);
       return;
     }
     setBusy(true);
@@ -77,8 +101,8 @@ function AdminPage() {
   };
 
   const makeInvite = async () => {
-    if (!inviteEmail.trim().endsWith(`@${COMPANY_DOMAIN}`)) {
-      toast.error(`الدعوات مقيدة بنطاق @${COMPANY_DOMAIN}`);
+    if (!domainAllowed(inviteEmail)) {
+      toast.error(`الدعوات مقيدة بالنطاقات: ${domainsText}`);
       return;
     }
     const inv = await createInvite(inviteEmail.trim());
@@ -89,6 +113,7 @@ function AdminPage() {
     setInviteEmail("");
     toast.success("تم إنشاء رابط الدعوة", { description: inv.code });
   };
+
 
   const sendReset = async (memberEmail: string) => {
     const error = await resetMemberPassword(memberEmail);
@@ -177,6 +202,30 @@ function AdminPage() {
           </div>
 
           <div className="space-y-6">
+            <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Globe className="size-4 text-primary" /> نطاقات البريد المسموح بها
+              </div>
+              <p className="text-xs text-muted-foreground">
+                اكتب نطاقات شركتك مفصولة بفاصلة (مثال: company.sa, example.com).
+                اتركها فارغة للسماح بأي بريد.
+              </p>
+              <Input
+                dir="ltr"
+                value={domainsInput}
+                onChange={(e) => setDomainsInput(e.target.value)}
+                placeholder="company.sa, example.com"
+                disabled={!isAdmin}
+              />
+              <Button
+                className="w-full"
+                onClick={() => void saveDomains()}
+                disabled={!isAdmin || domainsBusy}
+              >
+                حفظ النطاقات
+              </Button>
+            </div>
+
             <form
               onSubmit={submit}
               className="space-y-3 rounded-2xl border border-border bg-surface p-4"
@@ -195,7 +244,7 @@ function AdminPage() {
                   dir="ltr"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={`name@${COMPANY_DOMAIN}`}
+                  placeholder={`name@${allowedDomains[0] ?? "example.com"}`}
                 />
               </div>
               <div className="space-y-1.5">
@@ -217,7 +266,7 @@ function AdminPage() {
                   dir="ltr"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder={`name@${COMPANY_DOMAIN}`}
+                  placeholder={`name@${allowedDomains[0] ?? "example.com"}`}
                 />
                 <Button onClick={makeInvite}>إنشاء</Button>
               </div>
