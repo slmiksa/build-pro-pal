@@ -266,6 +266,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
               name: raw.name,
               size: raw.size,
               src: raw.path ? signed.get(raw.path) : raw.src,
+              path: raw.path,
+              mime: raw.mime,
               pages: raw.pages,
               durationSec: raw.durationSec,
             }
