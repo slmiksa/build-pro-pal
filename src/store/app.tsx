@@ -705,6 +705,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [messages, log, refresh],
   );
 
+  const fetchAttachment = useCallback<Ctx["fetchAttachment"]>(async (path) => {
+    const { data, error } = await supabase.storage.from(BUCKET).download(path);
+    if (error || !data) return null;
+    return data;
+  }, []);
+
   const addMember = useCallback<Ctx["addMember"]>(async ({ name, email, title, password }) => {
     const { createMember } = await import("@/lib/members.functions");
     try {
