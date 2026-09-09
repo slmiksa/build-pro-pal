@@ -116,6 +116,10 @@ type Ctx = {
     password: string,
   ) => Promise<string | null>;
   toggleMemberDisabled: (id: UserId) => Promise<void>;
+  setDirectoryFlags: (
+    id: UserId,
+    patch: { canBrowseDirectory?: boolean; hiddenInDirectory?: boolean },
+  ) => Promise<void>;
   createInvite: (email: string) => Promise<Invite | null>;
 };
 
