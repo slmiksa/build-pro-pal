@@ -18,8 +18,13 @@ const rows: { key: keyof Policy; label: string; hint: string }[] = [
   },
   {
     key: "allowCopy",
-    label: "السماح بالنسخ وإعادة التوجيه",
+    label: "السماح بالنسخ",
     hint: "يشمل نسخ النص وسحب الصور",
+  },
+  {
+    key: "allowForward",
+    label: "السماح بإعادة التوجيه",
+    hint: "يتيح للمستلم تمرير الرسالة لمحادثة أخرى",
   },
   {
     key: "blockScreenshot",
