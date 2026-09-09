@@ -111,7 +111,10 @@ type Ctx = {
     title: string;
     password: string;
   }) => Promise<{ error: string | null }>;
-  resetMemberPassword: (email: string) => Promise<string | null>;
+  resetMemberPassword: (
+    userId: UserId,
+    password: string,
+  ) => Promise<string | null>;
   toggleMemberDisabled: (id: UserId) => Promise<void>;
   createInvite: (email: string) => Promise<Invite | null>;
 };
