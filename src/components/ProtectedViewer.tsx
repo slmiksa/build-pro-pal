@@ -172,25 +172,84 @@ export function ProtectedViewer({
         )}
 
         <div className="mx-auto max-w-3xl space-y-4 p-4 sm:p-8">
-          {att.src ? (
-            <img
-              src={att.src}
-              alt={att.name}
-              draggable={false}
-              className="w-full rounded-xl border border-border"
-            />
-          ) : (
-            (att.pages ?? ["لا يوجد محتوى للعرض."]).map((p, i) => (
-              <article
-                key={i}
-                className="rounded-xl border border-border bg-surface p-6 shadow-sm"
-              >
-                <div className="mb-3 text-[11px] text-muted-foreground">
-                  صفحة {i + 1} من {(att.pages ?? []).length || 1}
+          {state === "loading" && (
+            <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
+              <Loader2 className="size-6 animate-spin" />
+              <p className="text-sm">جارٍ فتح الملف…</p>
+            </div>
+          )}
+
+          {state === "error" && (
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface p-10 text-center">
+              <FileWarning className="size-7 text-warning" />
+              <p className="text-sm font-semibold">تعذّر فتح الملف</p>
+              <p className="max-w-xs text-xs leading-6 text-muted-foreground">
+                قد يكون الملف حُذف أو انتهت صلاحية الرسالة. اطلب من المرسل
+                إعادة إرساله.
+              </p>
+            </div>
+          )}
+
+          {state === "ready" && objectUrl && (
+            <>
+              {isImage && (
+                <img
+                  src={objectUrl}
+                  alt={att.name}
+                  draggable={false}
+                  className="w-full rounded-xl border border-border"
+                />
+              )}
+              {isPdf && (
+                <object
+                  data={objectUrl}
+                  type="application/pdf"
+                  className="h-[75vh] w-full rounded-xl border border-border"
+                >
+                  <p className="p-6 text-sm text-muted-foreground">
+                    متصفحك لا يدعم عرض ملفات PDF داخل الصفحة.
+                  </p>
+                </object>
+              )}
+              {isAudio && (
+                <audio
+                  src={objectUrl}
+                  controls
+                  controlsList="nodownload"
+                  className="w-full"
+                />
+              )}
+              {isVideo && (
+                <video
+                  src={objectUrl}
+                  controls
+                  controlsList="nodownload"
+                  className="w-full rounded-xl border border-border"
+                />
+              )}
+              {textBody !== null && (
+                <article className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+                  <pre className="whitespace-pre-wrap text-[14px] leading-7">
+                    {textBody}
+                  </pre>
+                </article>
+              )}
+              {!isImage && !isPdf && !isAudio && !isVideo && textBody === null && (
+                <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface p-10 text-center">
+                  <FileWarning className="size-7 text-primary" />
+                  <p className="text-sm font-semibold">
+                    هذا النوع من الملفات لا يُعرض داخل التطبيق
+                  </p>
+                  <p className="max-w-sm text-xs leading-6 text-muted-foreground">
+                    {att.name} · {att.size}
+                    <br />
+                    {policy.allowDownload
+                      ? "يمكنك حفظه على جهازك من زر التحميل بالأعلى."
+                      : "منع المرسل تحميله، لذلك لا يمكن فتحه خارج التطبيق."}
+                  </p>
                 </div>
-                <p className="text-[15px] leading-8">{p}</p>
-              </article>
-            ))
+              )}
+            </>
           )}
         </div>
 
