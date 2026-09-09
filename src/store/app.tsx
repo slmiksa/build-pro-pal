@@ -440,9 +440,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => void refresh(), 250);
     };
+    const onMessage = (payload: { eventType: string; new: Record<string, unknown> }) => {
+      bump();
+      if (payload.eventType !== "INSERT") return;
+      const row = payload.new;
+      const senderId = row["sender_id"] as string | undefined;
+      const convId = row["conversation_id"] as string | undefined;
+      if (!senderId || !convId || senderId === currentUserId) return;
+      const conv = conversationsRef.current.find((c) => c.id === convId);
+      if (!conv || !conv.memberIds.includes(currentUserId)) return;
+      const sender = usersRef.current.find((u) => u.id === senderId);
+      const title =
+        conv.kind === "group" && conv.name
+          ? `${conv.name} · ${sender?.name ?? "رسالة جديدة"}`
+          : (sender?.name ?? "رسالة جديدة");
+      const body = row["attachment"]
+        ? "أرسل لك ملفاً"
+        : ((row["text"] as string | null) ?? "رسالة جديدة");
+      showMessageNotification({ title, body, tag: convId });
+    };
     const channel = supabase
       .channel("dir3-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, bump)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "messages" },
+        onMessage as never,
+      )
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, bump)
       .on(
         "postgres_changes",
