@@ -257,8 +257,10 @@ function AdminPage() {
                     variant={u.disabled ? "secondary" : "outline"}
                     size="sm"
                     className="min-w-0 rounded-2xl shadow-none"
+                    disabled={!isAdmin}
                     onClick={() => toggleMemberDisabled(u.id)}
                   >
+
                     <Power className="size-3.5" />
                     {u.disabled ? "تنشيط" : "تعطيل"}
                   </Button>
