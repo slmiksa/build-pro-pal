@@ -628,8 +628,8 @@ function NewChatDialog({
             </Button>
           </TabsContent>
 
-          {isAdmin && (
             <TabsContent value="group" className="space-y-3 pt-3">
+
               <Input
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
