@@ -281,10 +281,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          can_browse_directory: boolean
           color: string
           created_at: string
           disabled: boolean
           email: string
+          hidden_in_directory: boolean
           id: string
           name: string
           online: boolean
@@ -292,10 +294,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          can_browse_directory?: boolean
           color?: string
           created_at?: string
           disabled?: boolean
           email?: string
+          hidden_in_directory?: boolean
           id: string
           name?: string
           online?: boolean
@@ -303,10 +307,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          can_browse_directory?: boolean
           color?: string
           created_at?: string
           disabled?: boolean
           email?: string
+          hidden_in_directory?: boolean
           id?: string
           name?: string
           online?: boolean
@@ -341,6 +347,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_browse_directory: { Args: { _user_id: string }; Returns: boolean }
       check_invite: {
         Args: { _code: string }
         Returns: {
@@ -376,6 +383,10 @@ export type Database = {
         Returns: boolean
       }
       register_message_open: { Args: { _message_id: string }; Returns: string }
+      shares_conversation: {
+        Args: { _a: string; _b: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "manager"

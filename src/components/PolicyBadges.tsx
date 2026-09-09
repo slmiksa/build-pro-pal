@@ -7,7 +7,6 @@ import {
   Eye,
   Forward,
   Share2,
-  ScanEye,
   Timer,
 } from "lucide-react";
 import type { Policy } from "@/lib/types";
@@ -32,8 +31,6 @@ export function policyItems(policy: Policy): Item[] {
       ? { icon: Forward, label: "إعادة التوجيه مسموحة" }
       : { icon: Share2, label: "إعادة التوجيه ممنوعة", danger: true },
   );
-  if (policy.blockScreenshot)
-    items.push({ icon: ScanEye, label: "إخفاء عند التقاط الشاشة", danger: true });
   if (policy.watermark)
     items.push({ icon: Droplets, label: "علامة مائية باسم المستلم" });
   if (policy.expiresInMin > 0)

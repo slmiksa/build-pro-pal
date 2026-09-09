@@ -27,11 +27,6 @@ const rows: { key: keyof Policy; label: string; hint: string }[] = [
     hint: "يتيح للمستلم تمرير الرسالة لمحادثة أخرى",
   },
   {
-    key: "blockScreenshot",
-    label: "إخفاء عند محاولة التقاط الشاشة",
-    hint: "تعتيم فوري + تحذير + تسجيل المحاولة",
-  },
-  {
     key: "watermark",
     label: "علامة مائية باسم المستلم",
     hint: "تجعل أي تسريب قابلاً للتتبع",

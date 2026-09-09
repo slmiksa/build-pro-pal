@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronRight,
-  EyeOff,
   Forward,
   Mail,
   Pin,
@@ -27,7 +26,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useScreenGuard } from "@/hooks/use-screen-guard";
 import { COMPANY_NAME } from "@/data/seed";
 import { formatTime, initials, relative } from "@/lib/format";
 import type { Message } from "@/lib/types";
@@ -90,21 +88,6 @@ function ChatPage() {
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
   const thread = visible.filter((m) => m.conversationId === activeId);
-  const threadProtected = thread.some((m) => m.policy.blockScreenshot);
-
-  const { masked, reveal } = useScreenGuard({
-    enabled: threadProtected,
-    onAttempt: (reason) => {
-      log("screenshot_attempt", `${reason} أثناء عرض محادثة محمية`, {
-        actorId: currentUserId ?? undefined,
-        conversationId: activeId ?? undefined,
-      });
-      toast.warning("تم تعتيم المحادثة", {
-        description: "سُجلت المحاولة وأُبلغ المرسل.",
-      });
-    },
-  });
-
   useEffect(() => {
     if (activeId) markRead(activeId);
   }, [activeId, markRead]);
@@ -483,25 +466,6 @@ function ChatPage() {
 
       <Composer conversationId={active.id} />
 
-      {masked && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-black text-white">
-          <EyeOff className="size-10 text-white/70" />
-          <div className="px-10 text-center">
-            <p className="font-display text-lg font-semibold">محتوى محمي</p>
-            <p className="mt-1.5 text-xs leading-6 text-white/60">
-              تم تعتيم المحادثة لحماية الرسائل من الالتقاط. كل محاولة تُسجَّل
-              باسمك في سجل التدقيق.
-            </p>
-          </div>
-          <Button
-            onClick={reveal}
-            size="sm"
-            className="rounded-full px-6 text-white"
-          >
-            عرض المحادثة
-          </Button>
-        </div>
-      )}
 
       {viewing && (
         <ProtectedViewer message={viewing} onClose={() => setViewing(null)} />

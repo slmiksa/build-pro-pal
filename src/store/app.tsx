@@ -116,6 +116,10 @@ type Ctx = {
     password: string,
   ) => Promise<string | null>;
   toggleMemberDisabled: (id: UserId) => Promise<void>;
+  setDirectoryFlags: (
+    id: UserId,
+    patch: { canBrowseDirectory?: boolean; hiddenInDirectory?: boolean },
+  ) => Promise<void>;
   createInvite: (email: string) => Promise<Invite | null>;
 };
 
@@ -226,6 +230,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           role: roleByUser.get(p.id) ?? "manager",
           online: p.online,
           disabled: p.disabled,
+          canBrowseDirectory: p.can_browse_directory ?? true,
+          hiddenInDirectory: p.hidden_in_directory ?? false,
           color: p.color || colorFor(p.id),
         })),
       );
@@ -844,6 +850,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [users, log, refresh],
   );
 
+  const setDirectoryFlags = useCallback<Ctx["setDirectoryFlags"]>(
+    async (id, patch) => {
+      const user = users.find((u) => u.id === id);
+      if (!user) return;
+      const update: {
+        can_browse_directory?: boolean;
+        hidden_in_directory?: boolean;
+      } = {};
+      if (patch.canBrowseDirectory !== undefined)
+        update.can_browse_directory = patch.canBrowseDirectory;
+      if (patch.hiddenInDirectory !== undefined)
+        update.hidden_in_directory = patch.hiddenInDirectory;
+      if (Object.keys(update).length === 0) return;
+      const { error } = await supabase.from("profiles").update(update).eq("id", id);
+      if (error) return;
+      await log("member_disabled", `تحديث ظهور الأعضاء لحساب ${user.name}`);
+      await refresh();
+    },
+    [users, log, refresh],
+  );
+
+
   const setAllowedDomains = useCallback<Ctx["setAllowedDomains"]>(
     async (domains) => {
       const clean = Array.from(
@@ -936,6 +964,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addMember,
       resetMemberPassword,
       toggleMemberDisabled,
+      setDirectoryFlags,
       createInvite,
     }),
     [
@@ -972,6 +1001,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addMember,
       resetMemberPassword,
       toggleMemberDisabled,
+      setDirectoryFlags,
       createInvite,
     ],
   );
