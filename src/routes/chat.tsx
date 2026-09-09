@@ -592,7 +592,7 @@ function NewChatDialog({
         <DialogHeader>
           <DialogTitle>محادثة جديدة</DialogTitle>
           <DialogDescription>
-            راسل زميلاً عبر بريده، أو أنشئ مجموعة عمل.
+            راسل زميلاً عبر بريده، أنشئ مجموعة عمل، أو أرسل رابط دعوة.
           </DialogDescription>
         </DialogHeader>
 
@@ -601,12 +601,14 @@ function NewChatDialog({
             <TabsTrigger value="direct" className="flex-1">
               محادثة خاصة
             </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="group" className="flex-1">
-                مجموعة
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="group" className="flex-1">
+              مجموعة
+            </TabsTrigger>
+            <TabsTrigger value="invite" className="flex-1">
+              دعوة
+            </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="direct" className="space-y-3 pt-3">
             <Input
