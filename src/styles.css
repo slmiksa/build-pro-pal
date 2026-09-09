@@ -148,15 +148,10 @@
   -webkit-user-drag: none;
 }
 
-/* Native-app safe areas */
+/* No bottom safe-area padding: the app fills the whole screen edge-to-edge. */
 @utility pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0px !important;
 }
-
-html[data-keyboard-open] .pb-safe {
-  padding-bottom: 0px;
-}
-
 
 @utility pt-safe {
   padding-top: calc(env(safe-area-inset-top, 0px));
@@ -184,16 +179,12 @@ html[data-keyboard-open] .pb-safe {
 }
 
 /* Installed app (PWA / WebView): fill the whole screen and keep the tab bar
-   glued to the bottom edge — only the home-indicator inset is reserved. */
+   glued to the bottom edge — no home-indicator inset is reserved. */
 @media all and (display-mode: standalone) {
   html:not([data-keyboard-open]) .app-viewport {
     top: 0;
     height: 100vh;
     max-height: 100vh;
-  }
-
-  .pb-safe {
-    padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) - 14px), 0px);
   }
 }
 
