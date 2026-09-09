@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { formatDateTime, initials } from "@/lib/format";
 import { useApp } from "@/store/app";
 
@@ -44,6 +45,7 @@ function AdminPage() {
     toggleMemberDisabled,
     createInvite,
     resetMemberPassword,
+    setDirectoryFlags,
     allowedDomains,
     setAllowedDomains,
   } = useApp();
@@ -260,6 +262,38 @@ function AdminPage() {
                     <Power className="size-3.5" />
                     {u.disabled ? "تنشيط" : "تعطيل"}
                   </Button>
+                  </div>
+                  <div className="col-span-2 space-y-2 rounded-2xl bg-surface-2/60 p-3">
+                    <label className="flex items-center justify-between gap-3 text-[12px]">
+                      <span className="min-w-0">
+                        <span className="block font-medium">يرى كل الأعضاء</span>
+                        <span className="block text-[10.5px] text-muted-foreground">
+                          إن أُغلق، لن يجد غيره إلا بالبحث بالبريد
+                        </span>
+                      </span>
+                      <Switch
+                        checked={u.canBrowseDirectory}
+                        disabled={!isAdmin}
+                        onCheckedChange={(v) =>
+                          void setDirectoryFlags(u.id, { canBrowseDirectory: v })
+                        }
+                      />
+                    </label>
+                    <label className="flex items-center justify-between gap-3 text-[12px]">
+                      <span className="min-w-0">
+                        <span className="block font-medium">مخفي عن قوائم الآخرين</span>
+                        <span className="block text-[10.5px] text-muted-foreground">
+                          لا يظهر حسابه إلا لمن يشاركه محادثة أو يبحث ببريده
+                        </span>
+                      </span>
+                      <Switch
+                        checked={u.hiddenInDirectory}
+                        disabled={!isAdmin}
+                        onCheckedChange={(v) =>
+                          void setDirectoryFlags(u.id, { hiddenInDirectory: v })
+                        }
+                      />
+                    </label>
                   </div>
                 </li>
               ))}
