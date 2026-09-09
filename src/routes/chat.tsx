@@ -183,6 +183,26 @@ function ChatPage() {
     setActiveId(res.id);
   };
 
+  const submitInvite = async () => {
+    const target = inviteEmail.trim();
+    if (!target.includes("@")) {
+      toast.error("اكتب بريداً صحيحاً");
+      return;
+    }
+    if (busy) return;
+    setBusy(true);
+    const inv = await createInvite(target);
+    setBusy(false);
+    if (!inv) {
+      toast.error("تعذّر إنشاء رابط الدعوة");
+      return;
+    }
+    const url = `${window.location.origin}/invite/${inv.code}`;
+    void navigator.clipboard?.writeText(url);
+    setInviteEmail("");
+    toast.success("تم إنشاء رابط الدعوة ونسخه", { description: url });
+  };
+
   const submitForward = async (targetId: string) => {
     if (!forwarding) return;
     const err = await forwardMessage(forwarding.id, targetId);
@@ -190,6 +210,8 @@ function ChatPage() {
     if (err) toast.error(err);
     else toast.success("تمت إعادة التوجيه");
   };
+
+
 
   const beginChat = async (userId: string) => {
     const id = await startDirect(userId);
