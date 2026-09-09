@@ -455,9 +455,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         conv.kind === "group" && conv.name
           ? `${conv.name} · ${sender?.name ?? "رسالة جديدة"}`
           : (sender?.name ?? "رسالة جديدة");
-      const body = row["attachment"]
-        ? "أرسل لك ملفاً"
-        : ((row["text"] as string | null) ?? "رسالة جديدة");
+      // Never leak protected content to the lock screen.
+      const body = row["attachment"] ? "أرسل لك ملفاً" : "لديك رسالة جديدة";
       showMessageNotification({ title, body, tag: convId });
     };
     const channel = supabase
