@@ -175,14 +175,17 @@ export type Database = {
         Row: {
           allow_copy: boolean
           allow_download: boolean
+          allow_forward: boolean
           attachment: Json | null
           block_screenshot: boolean
           conversation_id: string
           created_at: string
           expires_at: string | null
           expires_in_min: number
+          forwarded_from: string | null
           id: string
           max_opens: number
+          mentions: string[]
           opens: number
           revoked: boolean
           sender_id: string
@@ -192,14 +195,17 @@ export type Database = {
         Insert: {
           allow_copy?: boolean
           allow_download?: boolean
+          allow_forward?: boolean
           attachment?: Json | null
           block_screenshot?: boolean
           conversation_id: string
           created_at?: string
           expires_at?: string | null
           expires_in_min?: number
+          forwarded_from?: string | null
           id?: string
           max_opens?: number
+          mentions?: string[]
           opens?: number
           revoked?: boolean
           sender_id: string
@@ -209,14 +215,17 @@ export type Database = {
         Update: {
           allow_copy?: boolean
           allow_download?: boolean
+          allow_forward?: boolean
           attachment?: Json | null
           block_screenshot?: boolean
           conversation_id?: string
           created_at?: string
           expires_at?: string | null
           expires_in_min?: number
+          forwarded_from?: string | null
           id?: string
           max_opens?: number
+          mentions?: string[]
           opens?: number
           revoked?: boolean
           sender_id?: string
@@ -229,6 +238,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_forwarded_from_fkey"
+            columns: ["forwarded_from"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
@@ -304,6 +320,20 @@ export type Database = {
         }[]
       }
       consume_invite: { Args: { _code: string }; Returns: boolean }
+      find_profile_by_email: {
+        Args: { _email: string }
+        Returns: {
+          disabled: boolean
+          email: string
+          id: string
+          name: string
+          title: string
+        }[]
+      }
+      forward_message: {
+        Args: { _message_id: string; _target_conversation_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
