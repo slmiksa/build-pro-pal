@@ -3,6 +3,7 @@ import { AlertTriangle, EyeOff, FileWarning, Loader2, Lock, ShieldAlert, X } fro
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Watermark } from "@/components/Watermark";
+import { DocumentRender } from "@/components/DocumentRender";
 import { PolicyBadges } from "@/components/PolicyBadges";
 import { useScreenGuard } from "@/hooks/use-screen-guard";
 import { useApp } from "@/store/app";
