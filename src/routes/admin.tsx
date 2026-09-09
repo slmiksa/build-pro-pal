@@ -38,12 +38,37 @@ function AdminPage() {
     toggleMemberDisabled,
     createInvite,
     resetMemberPassword,
+    allowedDomains,
+    setAllowedDomains,
   } = useApp();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [busy, setBusy] = useState(false);
+  const [domainsInput, setDomainsInput] = useState("");
+  const [domainsBusy, setDomainsBusy] = useState(false);
+  const domainsText = allowedDomains.join("، ");
+
+  useEffect(() => {
+    setDomainsInput(allowedDomains.join(", "));
+  }, [allowedDomains]);
+
+  const domainAllowed = (value: string) => {
+    if (allowedDomains.length === 0) return true;
+    const at = value.trim().toLowerCase().split("@")[1] ?? "";
+    return allowedDomains.includes(at);
+  };
+
+  const saveDomains = async () => {
+    setDomainsBusy(true);
+    const err = await setAllowedDomains(
+      domainsInput.split(/[,،\s]+/).filter(Boolean),
+    );
+    setDomainsBusy(false);
+    if (err) toast.error("تعذّر حفظ النطاقات");
+    else toast.success("تم حفظ النطاقات المسموح بها");
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,8 +77,8 @@ function AdminPage() {
       toast.error("الاسم والبريد مطلوبان");
       return;
     }
-    if (!email.trim().endsWith(`@${COMPANY_DOMAIN}`)) {
-      toast.error(`يجب أن يكون البريد على نطاق @${COMPANY_DOMAIN}`);
+    if (!domainAllowed(email)) {
+      toast.error(`يجب أن يكون البريد على أحد النطاقات: ${domainsText}`);
       return;
     }
     setBusy(true);
@@ -77,8 +102,8 @@ function AdminPage() {
   };
 
   const makeInvite = async () => {
-    if (!inviteEmail.trim().endsWith(`@${COMPANY_DOMAIN}`)) {
-      toast.error(`الدعوات مقيدة بنطاق @${COMPANY_DOMAIN}`);
+    if (!domainAllowed(inviteEmail)) {
+      toast.error(`الدعوات مقيدة بالنطاقات: ${domainsText}`);
       return;
     }
     const inv = await createInvite(inviteEmail.trim());
@@ -89,6 +114,7 @@ function AdminPage() {
     setInviteEmail("");
     toast.success("تم إنشاء رابط الدعوة", { description: inv.code });
   };
+
 
   const sendReset = async (memberEmail: string) => {
     const error = await resetMemberPassword(memberEmail);
