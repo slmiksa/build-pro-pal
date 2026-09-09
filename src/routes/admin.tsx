@@ -415,6 +415,37 @@ function AdminPage() {
           </div>
         </div>
       </div>
+
+      <Dialog
+        open={pwTarget !== null}
+        onOpenChange={(o) => {
+          if (!o) setPwTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-right font-display">
+              كلمة مرور {pwTarget?.name}
+            </DialogTitle>
+            <DialogDescription className="text-right">
+              تُطبّق فوراً بدون أي رابط بريد — أبلغ العضو بها.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            dir="ltr"
+            value={pwValue}
+            onChange={(e) => setPwValue(e.target.value)}
+            placeholder="8 أحرف على الأقل"
+          />
+          <Button
+            className="w-full rounded-2xl"
+            disabled={pwBusy}
+            onClick={() => void applyMemberPassword()}
+          >
+            حفظ كلمة المرور
+          </Button>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
