@@ -34,18 +34,18 @@ export function AppShell({
   hideTabs?: boolean;
   showProfile?: boolean;
 }) {
-  const { currentUser, ready, signOut } = useApp();
+  const { currentUser, currentUserId, ready, signOut } = useApp();
   const navigate = useNavigate();
   useAppHeight();
 
   useEffect(() => {
-    if (ready && !currentUser) navigate({ to: "/", replace: true });
-  }, [ready, currentUser, navigate]);
+    if (ready && !currentUserId) navigate({ to: "/", replace: true });
+  }, [ready, currentUserId, navigate]);
 
   if (!currentUser) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        جارٍ التحقق من الجلسة…
+        جارٍ تحميل الحساب…
       </div>
     );
   }
