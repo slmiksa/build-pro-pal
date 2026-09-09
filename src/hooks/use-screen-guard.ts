@@ -56,16 +56,18 @@ export function useScreenGuard(options: {
     };
     const onContext = (e: MouseEvent) => e.preventDefault();
 
-    // Mobile capture heuristics: iOS/Android fire a rapid screen-size or
-    // pixel-ratio change plus a short app-switch when the system screenshot
-    // UI appears. Mask instantly on those signals only.
-    const onMobileCapture = () => trigger("محاولة التقاط شاشة");
+    // Mobile: the system screenshot UI steals focus for a moment. On touch
+    // devices that focus loss is the only available capture signal, so mask
+    // instantly there (desktop relies on the key shortcuts above instead).
+    const isTouch = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+    const onMobileCapture = () => {
+      if (isTouch) trigger("محاولة التقاط شاشة");
+    };
 
     window.addEventListener("keydown", onKey, true);
     window.addEventListener("keyup", onKeyUp, true);
     document.addEventListener("contextmenu", onContext);
-    window.matchMedia?.("(display-mode: standalone)");
-    window.addEventListener("resize", onMobileCapture);
+    if (isTouch) window.addEventListener("blur", onMobileCapture);
 
     // Screen-recording detection: patch getDisplayMedia for this session.
     const md = navigator.mediaDevices as MediaDevices | undefined;
