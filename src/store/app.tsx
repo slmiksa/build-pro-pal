@@ -10,6 +10,7 @@ import {
   type Context,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { showMessageNotification } from "@/lib/notifications";
 import type {
   Attachment,
   AuditEvent,
