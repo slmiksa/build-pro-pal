@@ -69,11 +69,27 @@ type Ctx = {
   conversationTitle: (c: Conversation) => string;
   refresh: () => Promise<void>;
   startDirect: (otherId: UserId) => Promise<string | null>;
+  startDirectByEmail: (
+    email: string,
+  ) => Promise<{ id: string | null; error: string | null }>;
+  createGroup: (input: {
+    name: string;
+    memberIds: UserId[];
+  }) => Promise<{ id: string | null; error: string | null }>;
+  updateGroupMembers: (
+    conversationId: string,
+    memberIds: UserId[],
+  ) => Promise<string | null>;
+  forwardMessage: (
+    messageId: string,
+    targetConversationId: string,
+  ) => Promise<string | null>;
   sendMessage: (input: {
     conversationId: string;
     text?: string | undefined;
     attachment?: Attachment | undefined;
     file?: File | Blob | undefined;
+    mentions?: UserId[] | undefined;
     policy: Policy;
   }) => Promise<void>;
   revokeMessage: (id: string) => Promise<void>;
@@ -255,6 +271,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           policy: {
             allowDownload: r.allow_download,
             allowCopy: r.allow_copy,
+            allowForward: r.allow_forward,
             blockScreenshot: r.block_screenshot,
             watermark: r.watermark,
             expiresInMin: r.expires_in_min,
@@ -262,6 +279,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           },
           readBy: readsByMessage.get(r.id) ?? [],
           opens: r.opens,
+          mentions: (r.mentions ?? []) as string[],
+          forwardedFrom: r.forwarded_from ?? undefined,
         };
       });
       setMessages(mapped);
@@ -462,8 +481,95 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [conversations, currentUserId, refresh],
   );
 
+  const startDirectByEmail = useCallback<Ctx["startDirectByEmail"]>(
+    async (email) => {
+      const clean = email.trim().toLowerCase();
+      if (!clean) return { id: null, error: "اكتب البريد الإلكتروني" };
+      const { data, error } = await supabase.rpc("find_profile_by_email", {
+        _email: clean,
+      });
+      const found = Array.isArray(data) ? data[0] : null;
+      if (error || !found) return { id: null, error: "لا يوجد عضو بهذا البريد" };
+      if (found.id === currentUserId)
+        return { id: null, error: "لا يمكنك مراسلة نفسك" };
+      if (found.disabled) return { id: null, error: "هذا الحساب معطّل" };
+      const id = await startDirect(found.id);
+      return id
+        ? { id, error: null }
+        : { id: null, error: "تعذّر بدء المحادثة" };
+    },
+    [currentUserId, startDirect],
+  );
+
+  const createGroup = useCallback<Ctx["createGroup"]>(
+    async ({ name, memberIds }) => {
+      if (!currentUserId) return { id: null, error: "الجلسة منتهية" };
+      if (!isAdmin) return { id: null, error: "إنشاء المجموعات للمسؤول فقط" };
+      const title = name.trim();
+      if (!title) return { id: null, error: "اكتب اسم المجموعة" };
+
+      const { data, error } = await supabase
+        .from("conversations")
+        .insert({ kind: "group", name: title, created_by: currentUserId })
+        .select("id")
+        .single();
+      if (error || !data) return { id: null, error: "تعذّر إنشاء المجموعة" };
+
+      const unique = Array.from(new Set([currentUserId, ...memberIds]));
+      const { error: memberError } = await supabase
+        .from("conversation_members")
+        .insert(
+          unique.map((user_id) => ({ conversation_id: data.id, user_id })),
+        );
+      if (memberError) return { id: null, error: "تعذّرت إضافة الأعضاء" };
+
+      await log("group_created", `إنشاء مجموعة «${title}» بـ ${unique.length} عضو`, {
+        conversationId: data.id,
+      });
+      await refresh();
+      return { id: data.id, error: null };
+    },
+    [currentUserId, isAdmin, log, refresh],
+  );
+
+  const updateGroupMembers = useCallback<Ctx["updateGroupMembers"]>(
+    async (conversationId, memberIds) => {
+      const conv = conversations.find((c) => c.id === conversationId);
+      if (!conv) return "المجموعة غير موجودة";
+      const toAdd = memberIds.filter((id) => !conv.memberIds.includes(id));
+      if (!toAdd.length) return null;
+      const { error } = await supabase
+        .from("conversation_members")
+        .insert(toAdd.map((user_id) => ({ conversation_id: conversationId, user_id })));
+      if (error) return "تعذّرت إضافة الأعضاء";
+      await refresh();
+      return null;
+    },
+    [conversations, refresh],
+  );
+
+  const forwardMessage = useCallback<Ctx["forwardMessage"]>(
+    async (messageId, targetConversationId) => {
+      const { error } = await supabase.rpc("forward_message", {
+        _message_id: messageId,
+        _target_conversation_id: targetConversationId,
+      });
+      if (error)
+        return error.message.includes("not_allowed")
+          ? "هذه الرسالة لا تسمح بإعادة التوجيه"
+          : "تعذّرت إعادة التوجيه";
+      await log("message_forwarded", "إعادة توجيه رسالة", {
+        messageId,
+        conversationId: targetConversationId,
+      });
+      await refresh();
+      return null;
+    },
+    [log, refresh],
+  );
+
   const sendMessage = useCallback<Ctx["sendMessage"]>(
-    async ({ conversationId, text, attachment, file, policy }) => {
+    async ({ conversationId, text, attachment, file, mentions, policy }) => {
       if (!currentUserId) return;
       let stored: StoredAttachment | null = attachment
         ? { ...attachment }
@@ -494,6 +600,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           expires_at: expiresAt,
           allow_download: policy.allowDownload,
           allow_copy: policy.allowCopy,
+          allow_forward: policy.allowForward,
+          mentions: mentions ?? [],
           block_screenshot: policy.blockScreenshot,
           watermark: policy.watermark,
           expires_in_min: policy.expiresInMin,
@@ -655,6 +763,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       conversationTitle,
       refresh,
       startDirect,
+      startDirectByEmail,
+      createGroup,
+      updateGroupMembers,
+      forwardMessage,
       sendMessage,
       revokeMessage,
       markRead,
@@ -683,6 +795,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       conversationTitle,
       refresh,
       startDirect,
+      startDirectByEmail,
+      createGroup,
+      updateGroupMembers,
+      forwardMessage,
       sendMessage,
       revokeMessage,
       markRead,

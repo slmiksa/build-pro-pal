@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, EyeOff, Search, ShieldCheck, Users2 } from "lucide-react";
+import {
+  ChevronRight,
+  EyeOff,
+  Forward,
+  Mail,
+  Plus,
+  Search,
+  ShieldCheck,
+  Users2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Composer } from "@/components/Composer";
@@ -8,6 +17,14 @@ import { MessageItem } from "@/components/MessageItem";
 import { ProtectedViewer } from "@/components/ProtectedViewer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useScreenGuard } from "@/hooks/use-screen-guard";
 import { COMPANY_NAME } from "@/data/seed";
 import { formatTime, initials, relative } from "@/lib/format";
@@ -45,11 +62,21 @@ function ChatPage() {
     markRead,
     registerOpen,
     startDirect,
+    startDirectByEmail,
+    createGroup,
+    forwardMessage,
+    isAdmin,
     log,
   } = useApp();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [viewing, setViewing] = useState<Message | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [groupName, setGroupName] = useState("");
+  const [groupMembers, setGroupMembers] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [forwarding, setForwarding] = useState<Message | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   const visible = useMemo(
@@ -116,6 +143,44 @@ function ChatPage() {
     setViewing(m);
   };
 
+  const submitEmail = async () => {
+    if (busy) return;
+    setBusy(true);
+    const res = await startDirectByEmail(email);
+    setBusy(false);
+    if (res.error || !res.id) {
+      toast.error(res.error ?? "تعذّر بدء المحادثة");
+      return;
+    }
+    setEmail("");
+    setNewOpen(false);
+    setActiveId(res.id);
+  };
+
+  const submitGroup = async () => {
+    if (busy) return;
+    setBusy(true);
+    const res = await createGroup({ name: groupName, memberIds: groupMembers });
+    setBusy(false);
+    if (res.error || !res.id) {
+      toast.error(res.error ?? "تعذّر إنشاء المجموعة");
+      return;
+    }
+    toast.success("تم إنشاء المجموعة");
+    setGroupName("");
+    setGroupMembers([]);
+    setNewOpen(false);
+    setActiveId(res.id);
+  };
+
+  const submitForward = async (targetId: string) => {
+    if (!forwarding) return;
+    const err = await forwardMessage(forwarding.id, targetId);
+    setForwarding(null);
+    if (err) toast.error(err);
+    else toast.success("تمت إعادة التوجيه");
+  };
+
   const beginChat = async (userId: string) => {
     const id = await startDirect(userId);
     if (!id) {
@@ -134,6 +199,15 @@ function ChatPage() {
         padded={false}
       >
         <div className="shrink-0 px-6 pt-4 pb-2">
+          <div className="mb-2 flex items-center gap-2">
+            <Button
+              onClick={() => setNewOpen(true)}
+              className="h-10 flex-1 gap-2 rounded-2xl"
+            >
+              <Plus className="size-4" />
+              {isAdmin ? "محادثة أو مجموعة جديدة" : "محادثة خاصة جديدة"}
+            </Button>
+          </div>
           <div className="relative">
             <Search className="pointer-events-none absolute end-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -250,6 +324,22 @@ function ChatPage() {
             );
           })}
         </div>
+
+        <NewChatDialog
+          open={newOpen}
+          onOpenChange={setNewOpen}
+          isAdmin={isAdmin}
+          email={email}
+          setEmail={setEmail}
+          onSubmitEmail={submitEmail}
+          groupName={groupName}
+          setGroupName={setGroupName}
+          groupMembers={groupMembers}
+          setGroupMembers={setGroupMembers}
+          onSubmitGroup={submitGroup}
+          people={users.filter((u) => u.id !== currentUserId && !u.disabled)}
+          busy={busy}
+        />
       </AppShell>
     );
   }
@@ -338,6 +428,7 @@ function ChatPage() {
                 thread[i - 1]?.senderId !== m.senderId
               }
               onOpen={openAttachment}
+              onForward={(msg) => setForwarding(msg)}
             />
           </div>
         ))}
@@ -369,6 +460,182 @@ function ChatPage() {
       {viewing && (
         <ProtectedViewer message={viewing} onClose={() => setViewing(null)} />
       )}
+
+      <Dialog
+        open={Boolean(forwarding)}
+        onOpenChange={(o) => !o && setForwarding(null)}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Forward className="size-4 text-primary" /> إعادة توجيه الرسالة
+            </DialogTitle>
+            <DialogDescription>
+              تنتقل الرسالة بنفس صلاحيات الحماية الأصلية.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-72 space-y-1 overflow-y-auto">
+            {conversations
+              .filter((c) => c.id !== active.id)
+              .map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => void submitForward(c.id)}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start transition-colors hover:bg-surface-2"
+                >
+                  <span className="grid size-9 place-items-center rounded-xl bg-surface-2 text-primary">
+                    {c.kind === "group" ? (
+                      <Users2 className="size-4" />
+                    ) : (
+                      <Mail className="size-4" />
+                    )}
+                  </span>
+                  <span className="truncate text-sm font-medium">
+                    {conversationTitle(c)}
+                  </span>
+                </button>
+              ))}
+            {conversations.length <= 1 && (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                لا توجد محادثة أخرى لإعادة التوجيه إليها.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
+  );
+}
+
+function NewChatDialog({
+  open,
+  onOpenChange,
+  isAdmin,
+  email,
+  setEmail,
+  onSubmitEmail,
+  groupName,
+  setGroupName,
+  groupMembers,
+  setGroupMembers,
+  onSubmitGroup,
+  people,
+  busy,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  isAdmin: boolean;
+  email: string;
+  setEmail: (v: string) => void;
+  onSubmitEmail: () => void | Promise<void>;
+  groupName: string;
+  setGroupName: (v: string) => void;
+  groupMembers: string[];
+  setGroupMembers: (v: string[]) => void;
+  onSubmitGroup: () => void | Promise<void>;
+  people: { id: string; name: string; title: string; email: string; color: string }[];
+  busy: boolean;
+}) {
+  const toggle = (id: string) =>
+    setGroupMembers(
+      groupMembers.includes(id)
+        ? groupMembers.filter((m) => m !== id)
+        : [...groupMembers, id],
+    );
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>محادثة جديدة</DialogTitle>
+          <DialogDescription>
+            راسل زميلاً عبر بريده، أو أنشئ مجموعة عمل.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs defaultValue="direct">
+          <TabsList className="w-full">
+            <TabsTrigger value="direct" className="flex-1">
+              محادثة خاصة
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="group" className="flex-1">
+                مجموعة
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          <TabsContent value="direct" className="space-y-3 pt-3">
+            <Input
+              type="email"
+              dir="ltr"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@company.com"
+              className="h-11 text-start"
+            />
+            <Button
+              className="w-full"
+              disabled={busy}
+              onClick={() => void onSubmitEmail()}
+            >
+              بدء المحادثة
+            </Button>
+          </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="group" className="space-y-3 pt-3">
+              <Input
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                placeholder="اسم المجموعة"
+                className="h-11"
+              />
+              <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl border border-border p-1">
+                {people.length === 0 && (
+                  <p className="py-6 text-center text-xs text-muted-foreground">
+                    لا يوجد أعضاء مفعّلون بعد.
+                  </p>
+                )}
+                {people.map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => toggle(u.id)}
+                    className={cn(
+                      "flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-start transition-colors",
+                      groupMembers.includes(u.id) ? "bg-primary/10" : "hover:bg-surface-2",
+                    )}
+                  >
+                    <span
+                      className="flex size-7 items-center justify-center rounded-lg text-[10px] font-bold text-primary-foreground"
+                      style={{ backgroundColor: u.color }}
+                    >
+                      {initials(u.name)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{u.name}</span>
+                      <span className="block truncate text-[10px] text-muted-foreground">
+                        {u.title}
+                      </span>
+                    </span>
+                    {groupMembers.includes(u.id) && (
+                      <span className="text-[10px] font-semibold text-primary">مضاف</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <Button
+                className="w-full"
+                disabled={busy || !groupName.trim() || groupMembers.length === 0}
+                onClick={() => void onSubmitGroup()}
+              >
+                إنشاء المجموعة
+              </Button>
+            </TabsContent>
+          )}
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 }

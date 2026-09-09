@@ -5,6 +5,8 @@ import {
   DownloadCloud,
   Droplets,
   Eye,
+  Forward,
+  Share2,
   ScanEye,
   Timer,
 } from "lucide-react";
@@ -23,7 +25,12 @@ export function policyItems(policy: Policy): Item[] {
   items.push(
     policy.allowCopy
       ? { icon: Copy, label: "النسخ مسموح" }
-      : { icon: CopySlash, label: "النسخ وإعادة التوجيه ممنوع", danger: true },
+      : { icon: CopySlash, label: "النسخ ممنوع", danger: true },
+  );
+  items.push(
+    policy.allowForward
+      ? { icon: Forward, label: "إعادة التوجيه مسموحة" }
+      : { icon: Share2, label: "إعادة التوجيه ممنوعة", danger: true },
   );
   if (policy.blockScreenshot)
     items.push({ icon: ScanEye, label: "إخفاء عند التقاط الشاشة", danger: true });
