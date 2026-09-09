@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { LogOut, MessagesSquare, ScrollText, Users } from "lucide-react";
+import { Download, LogOut, MessagesSquare, ScrollText, Users } from "lucide-react";
+import { InstallAppDialog } from "@/components/InstallApp";
 import { useAppHeight } from "@/hooks/use-app-height";
 import { initials } from "@/lib/format";
 import { cn } from "@/lib/utils";
