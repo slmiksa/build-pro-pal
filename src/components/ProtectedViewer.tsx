@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, EyeOff, FileWarning, Loader2, Lock, ShieldAlert, X } from "lucide-react";
+import { FileWarning, Loader2, Lock, ShieldAlert, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Watermark } from "@/components/Watermark";
@@ -164,7 +164,9 @@ export function ProtectedViewer({
         </div>
       )}
 
-      <div className="relative flex-1 overflow-auto no-leak">
+      <div
+        className={`relative flex-1 overflow-auto ${policy.allowCopy ? "select-text" : "no-leak"}`}
+      >
         <div className="mx-auto max-w-3xl space-y-4 p-4 sm:p-8">
           {state === "loading" && (
             <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
