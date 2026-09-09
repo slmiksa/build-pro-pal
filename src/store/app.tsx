@@ -93,7 +93,14 @@ type Ctx = {
   createInvite: (email: string) => Promise<Invite | null>;
 };
 
-const AppContext = createContext<Ctx | null>(null);
+// Keep a single context instance even if this module is evaluated twice
+// (route code-splitting / HMR can create duplicate module instances).
+const globalCtxStore = globalThis as unknown as {
+  __dir3AppContext?: React.Context<Ctx | null>;
+};
+const AppContext: React.Context<Ctx | null> =
+  globalCtxStore.__dir3AppContext ??
+  (globalCtxStore.__dir3AppContext = createContext<Ctx | null>(null));
 
 const ms = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0);
 
