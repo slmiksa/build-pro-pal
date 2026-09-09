@@ -1,0 +1,10 @@
+revoke all on function public.has_role(uuid, public.app_role) from public, anon, authenticated;
+revoke all on function public.is_member(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+revoke all on function public.update_updated_at_column() from public, anon, authenticated;
+revoke all on function public.register_message_open(uuid) from public, anon;
+revoke all on function public.consume_invite(text) from public, anon;
+revoke all on function public.check_invite(text) from public;
+grant execute on function public.check_invite(text) to anon, authenticated;
+grant execute on function public.register_message_open(uuid) to authenticated;
+grant execute on function public.consume_invite(text) to authenticated;
