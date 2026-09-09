@@ -138,6 +138,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [audit, setAudit] = useState<AuditEvent[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
+  const [allowedDomains, setAllowedDomainsState] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const loadingRef = useRef(false);
   const messagesRef = useRef<Message[]>([]);
