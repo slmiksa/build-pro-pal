@@ -7,6 +7,7 @@ import {
   Smartphone,
   SquarePlus,
 } from "lucide-react";
+import { NotificationsCard } from "@/components/NotificationsPrompt";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -135,6 +136,8 @@ export function InstallAppContent() {
           <Step n={4}>اضغط «إضافة» وستظهر الأيقونة على شاشتك.</Step>
         </ol>
       </div>
+
+      <NotificationsCard />
 
       <p className="text-center text-[11px] text-muted-foreground">
         بعد التثبيت يفتح التطبيق بملء الشاشة مثل أي تطبيق على جهازك.
