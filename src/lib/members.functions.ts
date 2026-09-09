@@ -6,9 +6,10 @@ const input = z.object({
   name: z.string().min(1).max(80),
   email: z.string().email(),
   title: z.string().max(80).default("مدير"),
+  password: z.string().min(8).max(72),
 });
 
-/** Admin-only: create a company account with a temporary password. */
+/** Admin-only: create a company account with a password chosen by the admin. */
 export const createMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => input.parse(data))
@@ -21,10 +22,9 @@ export const createMember = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const password = `Dr3-${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
     const { error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
-      password,
+      password: data.password,
       email_confirm: true,
       user_metadata: { name: data.name, title: data.title },
     });
@@ -42,5 +42,5 @@ export const createMember = createServerFn({ method: "POST" })
       detail: `إضافة عضو جديد: ${data.name} (${data.email})`,
     });
 
-    return { error: null as string | null, password };
+    return { error: null as string | null };
   });

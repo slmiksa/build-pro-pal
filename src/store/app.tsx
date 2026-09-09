@@ -106,7 +106,8 @@ type Ctx = {
     name: string;
     email: string;
     title: string;
-  }) => Promise<{ error: string | null; password?: string | undefined }>;
+    password: string;
+  }) => Promise<{ error: string | null }>;
   resetMemberPassword: (email: string) => Promise<string | null>;
   toggleMemberDisabled: (id: UserId) => Promise<void>;
   createInvite: (email: string) => Promise<Invite | null>;
@@ -700,13 +701,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [messages, log, refresh],
   );
 
-  const addMember = useCallback<Ctx["addMember"]>(async ({ name, email, title }) => {
+  const addMember = useCallback<Ctx["addMember"]>(async ({ name, email, title, password }) => {
     const { createMember } = await import("@/lib/members.functions");
     try {
-      const res = await createMember({ data: { name, email, title } });
+      const res = await createMember({ data: { name, email, title, password } });
       if (res.error) return { error: res.error };
       await refresh();
-      return { error: null, password: res.password };
+      return { error: null };
     } catch {
       return { error: "تعذّر إنشاء الحساب" };
     }
