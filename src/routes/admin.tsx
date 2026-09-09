@@ -146,10 +146,24 @@ function AdminPage() {
     toast.success("تم تغيير كلمة المرور");
   };
 
-  const sendReset = async (memberEmail: string) => {
-    const error = await resetMemberPassword(memberEmail);
-    if (error) toast.error("تعذّر إرسال الرابط");
-    else toast.success("أُرسل رابط إعادة تعيين كلمة المرور");
+  const applyMemberPassword = async () => {
+    if (!pwTarget) return;
+    if (pwValue.trim().length < 8) {
+      toast.error("كلمة المرور يجب ألا تقل عن 8 أحرف");
+      return;
+    }
+    setPwBusy(true);
+    const error = await resetMemberPassword(pwTarget.id, pwValue.trim());
+    setPwBusy(false);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    toast.success("تم تغيير كلمة المرور", {
+      description: `يستطيع ${pwTarget.name} الدخول بها مباشرة.`,
+    });
+    setPwTarget(null);
+    setPwValue("");
   };
 
   const copyLink = (code: string) => {
