@@ -14,16 +14,312 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_events: {
+        Row: {
+          actor_id: string
+          at: string
+          conversation_id: string | null
+          detail: string
+          id: string
+          message_id: string | null
+          type: string
+        }
+        Insert: {
+          actor_id: string
+          at?: string
+          conversation_id?: string | null
+          detail?: string
+          id?: string
+          message_id?: string | null
+          type: string
+        }
+        Update: {
+          actor_id?: string
+          at?: string
+          conversation_id?: string | null
+          detail?: string
+          id?: string
+          message_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_events_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_members: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_members_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: Database["public"]["Enums"]["conversation_kind"]
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          kind?: Database["public"]["Enums"]["conversation_kind"]
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["conversation_kind"]
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invites: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          used: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          used?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          used?: boolean
+        }
+        Relationships: []
+      }
+      message_reads: {
+        Row: {
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          allow_copy: boolean
+          allow_download: boolean
+          attachment: Json | null
+          block_screenshot: boolean
+          conversation_id: string
+          created_at: string
+          expires_at: string | null
+          expires_in_min: number
+          id: string
+          max_opens: number
+          opens: number
+          revoked: boolean
+          sender_id: string
+          text: string | null
+          watermark: boolean
+        }
+        Insert: {
+          allow_copy?: boolean
+          allow_download?: boolean
+          attachment?: Json | null
+          block_screenshot?: boolean
+          conversation_id: string
+          created_at?: string
+          expires_at?: string | null
+          expires_in_min?: number
+          id?: string
+          max_opens?: number
+          opens?: number
+          revoked?: boolean
+          sender_id: string
+          text?: string | null
+          watermark?: boolean
+        }
+        Update: {
+          allow_copy?: boolean
+          allow_download?: boolean
+          attachment?: Json | null
+          block_screenshot?: boolean
+          conversation_id?: string
+          created_at?: string
+          expires_at?: string | null
+          expires_in_min?: number
+          id?: string
+          max_opens?: number
+          opens?: number
+          revoked?: boolean
+          sender_id?: string
+          text?: string | null
+          watermark?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          color: string
+          created_at: string
+          disabled: boolean
+          email: string
+          id: string
+          name: string
+          online: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          disabled?: boolean
+          email?: string
+          id: string
+          name?: string
+          online?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          disabled?: boolean
+          email?: string
+          id?: string
+          name?: string
+          online?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_invite: {
+        Args: { _code: string }
+        Returns: {
+          email: string
+          expires_at: string
+          used: boolean
+        }[]
+      }
+      consume_invite: { Args: { _code: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_member: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
+      register_message_open: { Args: { _message_id: string }; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "manager"
+      conversation_kind: "direct" | "group"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +446,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "manager"],
+      conversation_kind: ["direct", "group"],
+    },
   },
 } as const
