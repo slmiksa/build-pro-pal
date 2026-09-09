@@ -365,6 +365,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_member: {
+        Args: {
+          _email: string
+          _name: string
+          _password: string
+          _title?: string
+        }
+        Returns: string
+      }
+      admin_set_member_password: {
+        Args: { _password: string; _user_id: string }
+        Returns: boolean
+      }
       can_browse_directory: { Args: { _user_id: string }; Returns: boolean }
       check_invite: {
         Args: { _code: string }
