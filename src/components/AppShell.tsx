@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Download, LogOut, MessagesSquare, ScrollText, Users } from "lucide-react";
 import { InstallAppDialog } from "@/components/InstallApp";
+import { NotificationsBanner } from "@/components/NotificationsPrompt";
 import { useAppHeight } from "@/hooks/use-app-height";
 import { initials } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -102,6 +103,8 @@ export function AppShell({
             </div>
           </header>
         )}
+
+        <NotificationsBanner />
 
         <main
           className={cn(

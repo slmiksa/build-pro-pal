@@ -76,8 +76,11 @@ export function InstallAppContent() {
 
   if (installed) {
     return (
-      <div className="rounded-2xl bg-primary/10 p-4 text-center text-[13px] font-semibold text-primary">
-        التطبيق مثبّت على جهازك بالفعل
+      <div className="space-y-4">
+        <div className="rounded-2xl bg-primary/10 p-4 text-center text-[13px] font-semibold text-primary">
+          التطبيق مثبّت على جهازك بالفعل
+        </div>
+        <NotificationsCard />
       </div>
     );
   }
