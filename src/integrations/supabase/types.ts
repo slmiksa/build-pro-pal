@@ -148,6 +148,24 @@ export type Database = {
         }
         Relationships: []
       }
+      keepalive: {
+        Row: {
+          id: number
+          last_ping: string
+          pings: number
+        }
+        Insert: {
+          id?: number
+          last_ping?: string
+          pings?: number
+        }
+        Update: {
+          id?: number
+          last_ping?: string
+          pings?: number
+        }
+        Relationships: []
+      }
       message_reads: {
         Row: {
           message_id: string
@@ -382,6 +400,7 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      ping_keepalive: { Args: never; Returns: undefined }
       register_message_open: { Args: { _message_id: string }; Returns: string }
       shares_conversation: {
         Args: { _a: string; _b: string }
