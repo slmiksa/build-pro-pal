@@ -44,7 +44,9 @@ if (await exists(path.join(dist, "server"))) {
 
 // cp -r dist/* لا ينسخ الملفات المخفية؛ لذا نضع .htaccess مباشرة في public_html عند توفره.
 if (await exists(productionRoot)) {
+  await rm(path.join(productionRoot, "server"), { recursive: true, force: true });
   await cp(sourceHtaccess, path.join(productionRoot, ".htaccess"), { force: true });
+  console.log(`تم حذف مجلد server القديم من ${productionRoot}`);
   console.log(`تم نسخ .htaccess إلى ${productionRoot}/.htaccess`);
 }
 
