@@ -54,6 +54,8 @@ type Ctx = {
   messages: Message[];
   audit: AuditEvent[];
   invites: Invite[];
+  allowedDomains: string[];
+  setAllowedDomains: (domains: string[]) => Promise<string | null>;
   currentUserId: UserId | null;
   currentUser: User | null;
   isAdmin: boolean;
