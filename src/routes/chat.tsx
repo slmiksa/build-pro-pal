@@ -128,7 +128,8 @@ function ChatPage() {
       };
     }
     if (nearBottom()) jumpToEnd();
-  }, [thread.length, activeId]);
+    return undefined;
+
 
 
   // Keep the newest message visible when the on-screen keyboard opens/closes.
