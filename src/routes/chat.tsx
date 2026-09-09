@@ -330,6 +330,22 @@ function ChatPage() {
                   </span>
                 </span>
               </button>
+              <button
+                type="button"
+                onClick={() => void togglePinned(c.id)}
+                aria-label={c.pinned ? "إلغاء التثبيت" : "تثبيت المحادثة"}
+                className={cn(
+                  "grid size-9 shrink-0 place-items-center rounded-full transition-colors",
+                  c.pinned ? "text-primary" : "text-muted-foreground/50",
+                )}
+              >
+                {c.pinned ? (
+                  <PinOff className="size-4" />
+                ) : (
+                  <Pin className="size-4" />
+                )}
+              </button>
+              </div>
             );
           })}
         </div>
