@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Copy, KeyRound, Link2, Power, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Copy, Globe, KeyRound, Link2, Power, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { COMPANY_DOMAIN } from "@/data/seed";
 import { formatDateTime, initials } from "@/lib/format";
 import { useApp } from "@/store/app";
 
