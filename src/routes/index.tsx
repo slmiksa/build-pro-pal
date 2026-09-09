@@ -53,16 +53,6 @@ function LoginPage() {
     e.preventDefault();
     if (busy) return;
 
-    if (mode === "forgot") {
-      if (!email.trim()) { toast.error("أدخل بريدك الرسمي"); return; }
-      setBusy(true);
-      const error = await resetMemberPassword(email.trim());
-      setBusy(false);
-      if (error) { toast.error("تعذّر إرسال رابط الاستعادة"); return; }
-      toast.success("أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك");
-      setMode("signin");
-      return;
-    }
 
     if (!email.trim() || !password.trim()) {
       toast.error("أدخل البريد وكلمة المرور");
