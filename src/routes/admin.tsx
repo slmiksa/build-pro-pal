@@ -47,6 +47,10 @@ function AdminPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [pwBusy, setPwBusy] = useState(false);
+  const [pwTarget, setPwTarget] = useState<{ id: string; name: string } | null>(
+    null,
+  );
+  const [pwValue, setPwValue] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [domainsInput, setDomainsInput] = useState("");
