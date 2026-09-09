@@ -36,14 +36,11 @@ const highlights = [
 ];
 
 function LoginPage() {
-  const { signIn, signUp, currentUserId, ready } = useApp();
+  const { signIn, currentUserId, ready } = useApp();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"welcome" | "signin" | "signup">(
-    "welcome",
-  );
+  const [mode, setMode] = useState<"welcome" | "signin">("welcome");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -54,43 +51,12 @@ function LoginPage() {
     e.preventDefault();
     if (busy) return;
 
-
     if (!email.trim() || !password.trim()) {
       toast.error("أدخل البريد وكلمة المرور");
       return;
     }
 
     setBusy(true);
-    if (mode === "signup") {
-      if (!name.trim()) {
-        setBusy(false);
-        { toast.error("أدخل الاسم الكامل"); return; }
-      }
-      if (password.length < 8) {
-        setBusy(false);
-        { toast.error("كلمة المرور يجب ألا تقل عن 8 أحرف"); return; }
-      }
-      const res = await signUp({ email: email.trim(), password, name: name.trim() });
-      if (res.error) {
-        setBusy(false);
-        toast.error(
-          res.error.includes("already")
-            ? "هذا البريد مسجّل مسبقاً"
-            : "تعذّر إنشاء الحساب",
-        );
-        return;
-      }
-      if (res.needsConfirmation) {
-        setBusy(false);
-        toast.success("أرسلنا رسالة تأكيد إلى بريدك، فعّل الحساب ثم سجّل الدخول");
-        setMode("signin");
-        return;
-      }
-      setBusy(false);
-      navigate({ to: "/chat" });
-      return;
-    }
-
     const error = await signIn(email.trim(), password);
     setBusy(false);
     if (error) { toast.error(error); return; }
