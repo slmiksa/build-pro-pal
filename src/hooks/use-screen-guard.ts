@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * Practical browser-side leak deterrence:
- *  - blurs protected content when the window loses focus or is hidden
- *  - reacts to PrintScreen / OS screenshot shortcuts
- *  - detects an active screen-capture (getDisplayMedia) session
- * A browser cannot fully block screenshots; this hides content and reports
- * the attempt so it can be logged and attributed.
+ * Pre-emptive leak deterrence: the content is blacked out the instant a key
+ * that can start a screenshot goes down (Meta / Ctrl / Alt / PrintScreen), so
+ * the capture itself lands on a black screen instead of the content.
+ * Also masks on focus loss, tab hiding, pointer leaving the window, and when a
+ * screen-capture session starts.
  */
 export function useScreenGuard(options: {
   enabled: boolean;
@@ -14,11 +13,17 @@ export function useScreenGuard(options: {
 }) {
   const { enabled, onAttempt } = options;
   const [masked, setMasked] = useState(false);
+  const reported = useRef(false);
 
   const trigger = useCallback(
     (reason: string) => {
       setMasked(true);
+      if (reported.current) return;
+      reported.current = true;
       onAttempt?.(reason);
+      window.setTimeout(() => {
+        reported.current = false;
+      }, 1500);
     },
     [onAttempt],
   );
@@ -30,15 +35,22 @@ export function useScreenGuard(options: {
     const onVisibility = () => {
       if (document.visibilityState === "hidden") trigger("مغادرة النافذة");
     };
+    const onPointerLeave = () => setMasked(true);
+
+    // Mask on key DOWN of any modifier that can begin a capture shortcut,
+    // before the full combination is completed.
     const onKey = (e: KeyboardEvent) => {
       const key = e.key;
-      const combo =
+      const risky =
         key === "PrintScreen" ||
-        (e.metaKey && e.shiftKey && ["3", "4", "5", "s"].includes(key)) ||
-        (e.metaKey && key === "p") ||
-        (e.ctrlKey && key === "p") ||
-        (e.shiftKey && e.metaKey && key === "S");
-      if (combo) {
+        key === "Meta" ||
+        key === "OS" ||
+        key === "Control" ||
+        key === "Alt" ||
+        e.metaKey ||
+        e.ctrlKey ||
+        (e.shiftKey && (e.metaKey || e.ctrlKey));
+      if (risky) {
         e.preventDefault();
         trigger("اختصار التقاط شاشة");
       }
@@ -47,6 +59,7 @@ export function useScreenGuard(options: {
 
     window.addEventListener("blur", onBlur);
     document.addEventListener("visibilitychange", onVisibility);
+    document.addEventListener("mouseleave", onPointerLeave);
     window.addEventListener("keydown", onKey, true);
     window.addEventListener("keyup", onKey, true);
     document.addEventListener("contextmenu", onContext);
@@ -64,6 +77,7 @@ export function useScreenGuard(options: {
     return () => {
       window.removeEventListener("blur", onBlur);
       document.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("mouseleave", onPointerLeave);
       window.removeEventListener("keydown", onKey, true);
       window.removeEventListener("keyup", onKey, true);
       document.removeEventListener("contextmenu", onContext);

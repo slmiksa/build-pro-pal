@@ -81,6 +81,7 @@ function ChatPage() {
   const [busy, setBusy] = useState(false);
   const [forwarding, setForwarding] = useState<Message | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const visible = useMemo(
     () => messages.filter((m) => !isExpired(m)),
@@ -108,21 +109,35 @@ function ChatPage() {
     if (activeId) markRead(activeId);
   }, [activeId, markRead]);
 
+  // Only jump to the newest message when the conversation changes or the user
+  // is already reading at the bottom — never yank them away from older messages.
+  const prevConvRef = useRef<string | null>(null);
+  const nearBottom = () => {
+    const el = scrollRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 140;
+  };
+
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end" });
+    if (prevConvRef.current !== activeId) {
+      prevConvRef.current = activeId;
+      endRef.current?.scrollIntoView({ block: "end" });
+      return;
+    }
+    if (nearBottom()) endRef.current?.scrollIntoView({ block: "end" });
   }, [thread.length, activeId]);
 
   // Keep the newest message visible when the on-screen keyboard opens/closes.
   useEffect(() => {
     if (!activeId) return;
     const toEnd = () => {
+      if (!nearBottom()) return;
       requestAnimationFrame(() =>
         endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" }),
       );
-      window.setTimeout(
-        () => endRef.current?.scrollIntoView({ block: "end" }),
-        280,
-      );
+      window.setTimeout(() => {
+        if (nearBottom()) endRef.current?.scrollIntoView({ block: "end" });
+      }, 280);
     };
     const vv = window.visualViewport;
     vv?.addEventListener("resize", toEnd);
@@ -432,7 +447,10 @@ function ChatPage() {
         </header>
       }
     >
-      <div className="chat-paper min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4">
+      <div
+        ref={scrollRef}
+        className="chat-paper min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4"
+      >
         {thread.length === 0 && (
           <p className="pt-10 text-center text-sm text-muted-foreground">
             لا توجد رسائل بعد.
