@@ -520,6 +520,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
       if (existing) return existing.id;
 
+      // Re-check against the database so a stale local list never creates a
+      // second chat with the same person.
+      const { data: mine } = await supabase
+        .from("conversation_members")
+        .select("conversation_id, conversations!inner(kind)")
+        .eq("user_id", currentUserId);
+      const mineIds = (mine ?? [])
+        .filter(
+          (r) =>
+            (r as unknown as { conversations?: { kind?: string } }).conversations
+              ?.kind === "direct",
+        )
+        .map((r) => r.conversation_id);
+      if (mineIds.length) {
+        const { data: theirs } = await supabase
+          .from("conversation_members")
+          .select("conversation_id")
+          .eq("user_id", otherId)
+          .in("conversation_id", mineIds);
+        const shared = theirs?.[0]?.conversation_id;
+        if (shared) {
+          await refresh();
+          return shared;
+        }
+      }
+
       const { data, error } = await supabase
         .from("conversations")
         .insert({ kind: "direct", created_by: currentUserId })
