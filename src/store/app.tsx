@@ -111,7 +111,10 @@ type Ctx = {
     title: string;
     password: string;
   }) => Promise<{ error: string | null }>;
-  resetMemberPassword: (email: string) => Promise<string | null>;
+  resetMemberPassword: (
+    userId: UserId,
+    password: string,
+  ) => Promise<string | null>;
   toggleMemberDisabled: (id: UserId) => Promise<void>;
   createInvite: (email: string) => Promise<Invite | null>;
 };
@@ -812,12 +815,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [refresh]);
 
-  const resetMemberPassword = useCallback<Ctx["resetMemberPassword"]>(async (email) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    return error ? error.message : null;
-  }, []);
+  const resetMemberPassword = useCallback<Ctx["resetMemberPassword"]>(
+    async (userId, password) => {
+      const { setMemberPassword } = await import("@/lib/members.functions");
+      try {
+        const res = await setMemberPassword({ data: { userId, password } });
+        return res.error;
+      } catch {
+        return "تعذّر تغيير كلمة المرور";
+      }
+    },
+    [],
+  );
 
   const toggleMemberDisabled = useCallback<Ctx["toggleMemberDisabled"]>(
     async (id) => {

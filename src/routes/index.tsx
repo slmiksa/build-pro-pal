@@ -35,9 +35,9 @@ const highlights = [
 ];
 
 function LoginPage() {
-  const { signIn, signUp, resetMemberPassword, currentUserId, ready } = useApp();
+  const { signIn, signUp, currentUserId, ready } = useApp();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"welcome" | "signin" | "signup" | "forgot">(
+  const [mode, setMode] = useState<"welcome" | "signin" | "signup">(
     "welcome",
   );
   const [email, setEmail] = useState("");
@@ -53,16 +53,6 @@ function LoginPage() {
     e.preventDefault();
     if (busy) return;
 
-    if (mode === "forgot") {
-      if (!email.trim()) { toast.error("أدخل بريدك الرسمي"); return; }
-      setBusy(true);
-      const error = await resetMemberPassword(email.trim());
-      setBusy(false);
-      if (error) { toast.error("تعذّر إرسال رابط الاستعادة"); return; }
-      toast.success("أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك");
-      setMode("signin");
-      return;
-    }
 
     if (!email.trim() || !password.trim()) {
       toast.error("أدخل البريد وكلمة المرور");
@@ -192,7 +182,7 @@ function LoginPage() {
                 />
               </div>
 
-              {mode === "forgot" ? null : (
+              {(
                 <div className="space-y-1.5 text-start">
                   <Label htmlFor="password">كلمة المرور</Label>
                   <Input
@@ -211,21 +201,13 @@ function LoginPage() {
                 disabled={busy}
                 className="h-14 w-full rounded-2xl text-base font-semibold"
               >
-                {mode === "signup"
-                  ? "إنشاء الحساب"
-                  : mode === "forgot"
-                    ? "إرسال رابط الاستعادة"
-                    : "دخول آمن"}
+                {mode === "signup" ? "إنشاء الحساب" : "دخول آمن"}
               </Button>
 
               {mode === "signin" ? (
-                <button
-                  type="button"
-                  onClick={() => setMode("forgot")}
-                  className="w-full text-center text-xs font-semibold text-primary"
-                >
-                  نسيت كلمة المرور؟
-                </button>
+                <p className="w-full text-center text-xs text-muted-foreground">
+                  نسيت كلمة المرور؟ تواصل مع مسؤول الشركة ليضبطها لك مباشرة.
+                </p>
               ) : null}
 
               <Button
