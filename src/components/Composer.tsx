@@ -181,7 +181,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
   const activeCount = policyItems(policy).filter((i) => i.danger).length;
 
   return (
-    <div className="pb-safe shrink-0 bg-background px-5 pt-3">
+    <div className="shrink-0 bg-background px-5 pt-3 pb-0">
       {mentionMatches.length > 0 && (
         <div className="mb-2 max-h-52 overflow-y-auto rounded-2xl border border-border bg-background p-1 shadow-lg">
           <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground">
