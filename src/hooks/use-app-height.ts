@@ -20,9 +20,9 @@ export function useAppHeight() {
         largestHeight = Math.max(largestHeight, layout, vh);
         // The keyboard is open only when the visual viewport shrinks a lot.
         const keyboardOpen = largestHeight - vh > 120;
-        // Otherwise always fill the real screen height so no dead space is left
-        // under the tab bar inside a WebView.
-        const h = keyboardOpen ? vh : Math.max(layout, vh);
+        // visualViewport is the reliable visible frame in iOS standalone mode.
+        // Using 100vh there can extend the app underneath browser/system chrome.
+        const h = keyboardOpen ? vh : vv?.height ?? layout;
         document.documentElement.style.setProperty("--app-h", `${h}px`);
         document.documentElement.style.setProperty(
           "--app-top",
