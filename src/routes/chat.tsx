@@ -237,7 +237,7 @@ function ChatPage() {
               className="h-10 flex-1 gap-2 rounded-2xl"
             >
               <Plus className="size-4" />
-              {isAdmin ? "محادثة أو مجموعة جديدة" : "محادثة خاصة جديدة"}
+              محادثة أو مجموعة جديدة
             </Button>
           </div>
           <div className="relative">
