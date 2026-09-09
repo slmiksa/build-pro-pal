@@ -155,6 +155,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
           id: `voice-${Date.now()}`,
           kind: "audio",
           name: "ملاحظة صوتية.webm",
+          mime: "audio/webm",
           size: `${Math.max(1, Math.round(blob.size / 1024))} ك.ب`,
           durationSec: Math.max(
             1,
