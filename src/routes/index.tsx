@@ -6,7 +6,6 @@ import { InstallAppDialog } from "@/components/InstallApp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logoAsset from "@/assets/logo.png.asset.json";
 import { COMPANY_DOMAIN, COMPANY_NAME } from "@/data/seed";
 import { useApp } from "@/store/app";
 
@@ -82,7 +81,7 @@ function LoginPage() {
             <div className="flex justify-center">
               <div className="grid size-24 place-items-center rounded-[28px] bg-accent">
                 <img
-                  src={logoAsset.url}
+                  src="/logo.png"
                   alt="شعار درع"
                   width={72}
                   height={72}
