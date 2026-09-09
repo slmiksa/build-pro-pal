@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "deploy": "vite build && echo '\n==> انسخ محتويات dist/client إلى public_html:\n    cp -r dist/client/. /home/shield.lamhasec.com/public_html/'",
+    "build": "vite build && cp -r dist/client/. dist/ && rm -rf dist/client dist/server dist/.output",
+    "build:dev": "vite build --mode development && cp -r dist/client/. dist/ && rm -rf dist/client dist/server dist/.output",
+    "deploy": "npm run build && echo 'cp -r dist/* /home/shield.lamhasec.com/public_html/'",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
