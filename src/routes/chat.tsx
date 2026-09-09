@@ -65,10 +65,11 @@ function ChatPage() {
     startDirect,
     startDirectByEmail,
     createGroup,
+    createInvite,
     forwardMessage,
-    isAdmin,
     log,
   } = useApp();
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [viewing, setViewing] = useState<Message | null>(null);
@@ -76,8 +77,10 @@ function ChatPage() {
   const [email, setEmail] = useState("");
   const [groupName, setGroupName] = useState("");
   const [groupMembers, setGroupMembers] = useState<string[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [forwarding, setForwarding] = useState<Message | null>(null);
+
   const endRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -180,6 +183,26 @@ function ChatPage() {
     setActiveId(res.id);
   };
 
+  const submitInvite = async () => {
+    const target = inviteEmail.trim();
+    if (!target.includes("@")) {
+      toast.error("اكتب بريداً صحيحاً");
+      return;
+    }
+    if (busy) return;
+    setBusy(true);
+    const inv = await createInvite(target);
+    setBusy(false);
+    if (!inv) {
+      toast.error("تعذّر إنشاء رابط الدعوة");
+      return;
+    }
+    const url = `${window.location.origin}/invite/${inv.code}`;
+    void navigator.clipboard?.writeText(url);
+    setInviteEmail("");
+    toast.success("تم إنشاء رابط الدعوة ونسخه", { description: url });
+  };
+
   const submitForward = async (targetId: string) => {
     if (!forwarding) return;
     const err = await forwardMessage(forwarding.id, targetId);
@@ -187,6 +210,8 @@ function ChatPage() {
     if (err) toast.error(err);
     else toast.success("تمت إعادة التوجيه");
   };
+
+
 
   const beginChat = async (userId: string) => {
     const id = await startDirect(userId);
@@ -212,7 +237,7 @@ function ChatPage() {
               className="h-10 flex-1 gap-2 rounded-2xl"
             >
               <Plus className="size-4" />
-              {isAdmin ? "محادثة أو مجموعة جديدة" : "محادثة خاصة جديدة"}
+              محادثة أو مجموعة جديدة
             </Button>
           </div>
           <div className="relative">
@@ -354,7 +379,10 @@ function ChatPage() {
         <NewChatDialog
           open={newOpen}
           onOpenChange={setNewOpen}
-          isAdmin={isAdmin}
+          inviteEmail={inviteEmail}
+          setInviteEmail={setInviteEmail}
+          onSubmitInvite={submitInvite}
+
           email={email}
           setEmail={setEmail}
           onSubmitEmail={submitEmail}
@@ -520,7 +548,6 @@ function ChatPage() {
 function NewChatDialog({
   open,
   onOpenChange,
-  isAdmin,
   email,
   setEmail,
   onSubmitEmail,
@@ -529,12 +556,14 @@ function NewChatDialog({
   groupMembers,
   setGroupMembers,
   onSubmitGroup,
+  inviteEmail,
+  setInviteEmail,
+  onSubmitInvite,
   people,
   busy,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  isAdmin: boolean;
   email: string;
   setEmail: (v: string) => void;
   onSubmitEmail: () => void | Promise<void>;
@@ -543,9 +572,13 @@ function NewChatDialog({
   groupMembers: string[];
   setGroupMembers: (v: string[]) => void;
   onSubmitGroup: () => void | Promise<void>;
+  inviteEmail: string;
+  setInviteEmail: (v: string) => void;
+  onSubmitInvite: () => void | Promise<void>;
   people: { id: string; name: string; title: string; email: string; color: string }[];
   busy: boolean;
 }) {
+
   const toggle = (id: string) =>
     setGroupMembers(
       groupMembers.includes(id)
@@ -559,7 +592,7 @@ function NewChatDialog({
         <DialogHeader>
           <DialogTitle>محادثة جديدة</DialogTitle>
           <DialogDescription>
-            راسل زميلاً عبر بريده، أو أنشئ مجموعة عمل.
+            راسل زميلاً عبر بريده، أنشئ مجموعة عمل، أو أرسل رابط دعوة.
           </DialogDescription>
         </DialogHeader>
 
@@ -568,12 +601,14 @@ function NewChatDialog({
             <TabsTrigger value="direct" className="flex-1">
               محادثة خاصة
             </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="group" className="flex-1">
-                مجموعة
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="group" className="flex-1">
+              مجموعة
+            </TabsTrigger>
+            <TabsTrigger value="invite" className="flex-1">
+              دعوة
+            </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="direct" className="space-y-3 pt-3">
             <Input
@@ -593,8 +628,8 @@ function NewChatDialog({
             </Button>
           </TabsContent>
 
-          {isAdmin && (
             <TabsContent value="group" className="space-y-3 pt-3">
+
               <Input
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
@@ -643,7 +678,29 @@ function NewChatDialog({
                 إنشاء المجموعة
               </Button>
             </TabsContent>
-          )}
+
+
+            <TabsContent value="invite" className="space-y-3 pt-3">
+              <p className="text-xs text-muted-foreground">
+                أنشئ رابط دعوة صالحاً 48 ساعة وأرسله لمن تريد انضمامه.
+              </p>
+              <Input
+                type="email"
+                dir="ltr"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="name@company.com"
+                className="h-11 text-start"
+              />
+              <Button
+                className="w-full"
+                disabled={busy}
+                onClick={() => void onSubmitInvite()}
+              >
+                إنشاء رابط الدعوة ونسخه
+              </Button>
+            </TabsContent>
+
         </Tabs>
       </DialogContent>
     </Dialog>

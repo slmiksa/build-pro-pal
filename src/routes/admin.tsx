@@ -257,8 +257,10 @@ function AdminPage() {
                     variant={u.disabled ? "secondary" : "outline"}
                     size="sm"
                     className="min-w-0 rounded-2xl shadow-none"
+                    disabled={!isAdmin}
                     onClick={() => toggleMemberDisabled(u.id)}
                   >
+
                     <Power className="size-3.5" />
                     {u.disabled ? "تنشيط" : "تعطيل"}
                   </Button>
@@ -301,7 +303,10 @@ function AdminPage() {
           </div>
 
           <div className="space-y-6">
+            {isAdmin && (
+              <>
             <div className="space-y-3 card-soft p-4">
+
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <Globe className="size-4 text-primary" /> نطاقات البريد المسموح بها
               </div>
@@ -368,6 +373,9 @@ function AdminPage() {
                 إضافة
               </Button>
             </form>
+              </>
+            )}
+
 
             <div className="space-y-3 card-soft p-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
