@@ -253,3 +253,18 @@ html[data-keyboard-open] .pb-safe {
   border: 1px solid hsl(var(--border, 0 0% 88%));
   padding: 6px 10px;
 }
+
+/* docx-preview output */
+.doc-view .docx-wrapper {
+  background: transparent;
+  padding: 0;
+  display: block;
+}
+.doc-view .docx-wrapper > section.docx {
+  width: 100% !important;
+  min-height: 0 !important;
+  padding: 12px !important;
+  margin: 0 0 12px !important;
+  box-shadow: none;
+  background: transparent;
+}
