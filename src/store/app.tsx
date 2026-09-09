@@ -186,7 +186,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   /* ---------- loading ---------- */
   const refresh = useCallback(async () => {
-    const me = (await supabase.auth.getSession()).data.session?.user.id ?? null;
+    const session = (await supabase.auth.getSession()).data.session;
+    const me = session?.user.id ?? null;
     if (!me) return;
     if (loadingRef.current) return;
     loadingRef.current = true;
@@ -221,8 +222,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       setIsAdmin(roleByUser.get(me) === "admin");
 
-      setUsers(
-        (profilesRes.data ?? []).map((p) => ({
+      const loadedUsers: User[] = (profilesRes.data ?? []).map((p) => ({
           id: p.id,
           name: p.name || p.email,
           email: p.email,
@@ -233,8 +233,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
           canBrowseDirectory: p.can_browse_directory ?? true,
           hiddenInDirectory: p.hidden_in_directory ?? false,
           color: p.color || colorFor(p.id),
-        })),
-      );
+        }));
+
+      // Never strand an authenticated user on the loading screen if a profile
+      // read is temporarily unavailable. The database profile replaces this
+      // session-derived fallback as soon as the next refresh succeeds.
+      if (!loadedUsers.some((user) => user.id === me)) {
+        const metadata = session?.user.user_metadata;
+        const email = session?.user.email ?? "";
+        loadedUsers.push({
+          id: me,
+          name:
+            typeof metadata?.["name"] === "string" && metadata["name"].trim()
+              ? metadata["name"]
+              : email.split("@")[0] || "مستخدم",
+          email,
+          title: typeof metadata?.["title"] === "string" ? metadata["title"] : "",
+          role: roleByUser.get(me) ?? "manager",
+          online: true,
+          disabled: false,
+          canBrowseDirectory: false,
+          hiddenInDirectory: false,
+          color: colorFor(me),
+        });
+      }
+      setUsers(loadedUsers);
 
       const membersByConv = new Map<string, string[]>();
       const lastReadFor = new Map<string, number>();
