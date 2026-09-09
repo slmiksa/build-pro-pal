@@ -96,6 +96,7 @@ type Ctx = {
   }) => Promise<void>;
   revokeMessage: (id: string) => Promise<void>;
   markRead: (conversationId: string) => Promise<void>;
+  togglePinned: (conversationId: string) => Promise<void>;
   registerOpen: (messageId: string) => Promise<"ok" | "limit">;
   /** Fetches the real file bytes from private storage. */
   fetchAttachment: (path: string) => Promise<Blob | null>;
@@ -228,11 +229,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const membersByConv = new Map<string, string[]>();
       const lastReadFor = new Map<string, number>();
+      const pinnedFor = new Set<string>();
       for (const m of memberRes.data ?? []) {
         const list = membersByConv.get(m.conversation_id) ?? [];
         list.push(m.user_id);
         membersByConv.set(m.conversation_id, list);
-        if (m.user_id === me) lastReadFor.set(m.conversation_id, ms(m.last_read_at));
+        if (m.user_id === me) {
+          lastReadFor.set(m.conversation_id, ms(m.last_read_at));
+          if ((m as { pinned?: boolean }).pinned) pinnedFor.add(m.conversation_id);
+        }
       }
 
       const readsByMessage = new Map<string, string[]>();
@@ -300,24 +305,61 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       setMessages(mapped);
 
-      setConversations(
-        (convRes.data ?? []).map((c) => {
-          const lastRead = lastReadFor.get(c.id) ?? 0;
-          const unread = mapped.filter(
-            (m) =>
-              m.conversationId === c.id &&
-              m.senderId !== me &&
-              m.createdAt > lastRead,
-          ).length;
-          return {
-            id: c.id,
-            kind: c.kind,
-            name: c.name ?? undefined,
-            memberIds: membersByConv.get(c.id) ?? [],
-            unread,
-          };
-        }),
-      );
+      const allConversations = (convRes.data ?? []).map((c) => {
+        const lastRead = lastReadFor.get(c.id) ?? 0;
+        const unread = mapped.filter(
+          (m) =>
+            m.conversationId === c.id &&
+            m.senderId !== me &&
+            m.createdAt > lastRead,
+        ).length;
+        return {
+          id: c.id,
+          kind: c.kind,
+          name: c.name ?? undefined,
+          memberIds: membersByConv.get(c.id) ?? [],
+          unread,
+          pinned: pinnedFor.has(c.id),
+        };
+      });
+
+      // Collapse duplicate one-to-one chats with the same person into the
+      // conversation that actually holds the history.
+      const activityOf = (id: string) => {
+        const list = mapped.filter((m) => m.conversationId === id);
+        return {
+          count: list.length,
+          last: list.length ? (list[list.length - 1]?.createdAt ?? 0) : 0,
+        };
+      };
+      const byPeer = new Map<string, (typeof allConversations)[number]>();
+      const deduped: typeof allConversations = [];
+      for (const c of allConversations) {
+        const peer =
+          c.kind === "direct"
+            ? c.memberIds.filter((id) => id !== me).sort().join(",")
+            : null;
+        if (!peer) {
+          deduped.push(c);
+          continue;
+        }
+        const kept = byPeer.get(peer);
+        if (!kept) {
+          byPeer.set(peer, c);
+          continue;
+        }
+        const a = activityOf(kept.id);
+        const b = activityOf(c.id);
+        const winner =
+          b.count > a.count || (b.count === a.count && b.last > a.last) ? c : kept;
+        const loser = winner === c ? kept : c;
+        byPeer.set(peer, {
+          ...winner,
+          unread: Math.max(winner.unread, loser.unread),
+          pinned: winner.pinned || loser.pinned,
+        });
+      }
+      setConversations([...deduped, ...byPeer.values()]);
 
       setAudit(
         (auditRes.data ?? []).map((e) => ({
@@ -478,6 +520,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
           c.memberIds.includes(currentUserId),
       );
       if (existing) return existing.id;
+
+      // Re-check against the database so a stale local list never creates a
+      // second chat with the same person.
+      const { data: mine } = await supabase
+        .from("conversation_members")
+        .select("conversation_id, conversations!inner(kind)")
+        .eq("user_id", currentUserId);
+      const mineIds = (mine ?? [])
+        .filter(
+          (r) =>
+            (r as unknown as { conversations?: { kind?: string } }).conversations
+              ?.kind === "direct",
+        )
+        .map((r) => r.conversation_id);
+      if (mineIds.length) {
+        const { data: theirs } = await supabase
+          .from("conversation_members")
+          .select("conversation_id")
+          .eq("user_id", otherId)
+          .in("conversation_id", mineIds);
+        const shared = theirs?.[0]?.conversation_id;
+        if (shared) {
+          await refresh();
+          return shared;
+        }
+      }
 
       const { data, error } = await supabase
         .from("conversations")
@@ -651,6 +719,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Stable identity: reads live message state from a ref so marking a thread
   // read can never re-trigger the effect that called it (refresh -> new
   // messages -> new callback -> mark again -> infinite loop / frozen tab).
+  const togglePinned = useCallback<Ctx["togglePinned"]>(
+    async (conversationId) => {
+      const me = currentUserRef.current;
+      if (!me) return;
+      let next = false;
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== conversationId) return c;
+          next = !c.pinned;
+          return { ...c, pinned: next };
+        }),
+      );
+      await supabase
+        .from("conversation_members")
+        .update({ pinned: next })
+        .eq("conversation_id", conversationId)
+        .eq("user_id", me);
+    },
+    [],
+  );
+
   const markRead = useCallback<Ctx["markRead"]>(
     async (conversationId) => {
       const me = currentUserRef.current;
@@ -831,6 +920,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       sendMessage,
       revokeMessage,
       markRead,
+      togglePinned,
       registerOpen,
       fetchAttachment,
       log,
@@ -866,6 +956,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       sendMessage,
       revokeMessage,
       markRead,
+      togglePinned,
       registerOpen,
       fetchAttachment,
       log,

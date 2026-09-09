@@ -5,6 +5,8 @@ import {
   EyeOff,
   Forward,
   Mail,
+  Pin,
+  PinOff,
   Plus,
   Search,
   ShieldCheck,
@@ -60,6 +62,7 @@ function ChatPage() {
     conversationTitle,
     userById,
     markRead,
+    togglePinned,
     registerOpen,
     startDirect,
     startDirectByEmail,
@@ -131,9 +134,15 @@ function ChatPage() {
   }, [activeId]);
 
 
-  const list = conversations.filter((c) =>
-    conversationTitle(c).includes(query.trim()),
-  );
+  const lastAt = (id: string) =>
+    visible.filter((m) => m.conversationId === id).slice(-1)[0]?.createdAt ?? 0;
+
+  const list = conversations
+    .filter((c) => conversationTitle(c).includes(query.trim()))
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      return lastAt(b.id) - lastAt(a.id);
+    });
 
   const openAttachment = async (m: Message) => {
     if ((await registerOpen(m.id)) === "limit") {
@@ -267,13 +276,16 @@ function ChatPage() {
               c.memberIds.find((id) => id !== currentUserId) ?? "",
             );
             return (
-              <button
+              <div
                 key={c.id}
-                onClick={() => setActiveId(c.id)}
                 className={cn(
-                  "flex w-full items-center gap-3.5 rounded-[26px] px-3 py-3 text-start transition-all active:scale-[0.99]",
-                  c.unread > 0 ? "bg-surface-2/70" : "active:bg-surface-2/60",
+                  "flex w-full items-center gap-1 rounded-[26px] pe-1 transition-all",
+                  c.unread > 0 ? "bg-surface-2/70" : "",
                 )}
+              >
+              <button
+                onClick={() => setActiveId(c.id)}
+                className="flex min-w-0 flex-1 items-center gap-3.5 rounded-[26px] px-3 py-3 text-start transition-all active:scale-[0.99] active:bg-surface-2/60"
               >
                 <span className="relative shrink-0">
                   <span
@@ -321,6 +333,22 @@ function ChatPage() {
                   </span>
                 </span>
               </button>
+              <button
+                type="button"
+                onClick={() => void togglePinned(c.id)}
+                aria-label={c.pinned ? "إلغاء التثبيت" : "تثبيت المحادثة"}
+                className={cn(
+                  "grid size-9 shrink-0 place-items-center rounded-full transition-colors",
+                  c.pinned ? "text-primary" : "text-muted-foreground/50",
+                )}
+              >
+                {c.pinned ? (
+                  <PinOff className="size-4" />
+                ) : (
+                  <Pin className="size-4" />
+                )}
+              </button>
+              </div>
             );
           })}
         </div>

@@ -3,6 +3,7 @@ import { AlertTriangle, EyeOff, FileWarning, Loader2, Lock, ShieldAlert, X } fro
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Watermark } from "@/components/Watermark";
+import { DocumentRender } from "@/components/DocumentRender";
 import { PolicyBadges } from "@/components/PolicyBadges";
 import { useScreenGuard } from "@/hooks/use-screen-guard";
 import { useApp } from "@/store/app";
@@ -109,6 +110,16 @@ export function ProtectedViewer({
   const isPdf = att.kind === "pdf" || type === "application/pdf";
   const isAudio = att.kind === "audio" || type.startsWith("audio/");
   const isVideo = type.startsWith("video/");
+  const lowerName = att.name.toLowerCase();
+  const isSheet =
+    /\.(xlsx|xlsm|xls|csv)$/.test(lowerName) ||
+    type.includes("spreadsheet") ||
+    type.includes("excel") ||
+    type === "text/csv";
+  const isWord =
+    /\.(docx)$/.test(lowerName) ||
+    type.includes("wordprocessingml") ||
+    type === "application/msword";
 
   const tryDownload = async () => {
     if (!policy.allowDownload) {
@@ -227,14 +238,26 @@ export function ProtectedViewer({
                   className="w-full rounded-xl border border-border"
                 />
               )}
-              {textBody !== null && (
+              {blob && (isSheet || isWord) && (
+                <DocumentRender
+                  blob={blob}
+                  kind={isSheet ? "spreadsheet" : "word"}
+                />
+              )}
+              {textBody !== null && !isSheet && !isWord && (
                 <article className="rounded-xl border border-border bg-surface p-6 shadow-sm">
                   <pre className="whitespace-pre-wrap text-[14px] leading-7">
                     {textBody}
                   </pre>
                 </article>
               )}
-              {!isImage && !isPdf && !isAudio && !isVideo && textBody === null && (
+              {!isImage &&
+                !isPdf &&
+                !isAudio &&
+                !isVideo &&
+                !isSheet &&
+                !isWord &&
+                textBody === null && (
                 <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface p-10 text-center">
                   <FileWarning className="size-7 text-primary" />
                   <p className="text-sm font-semibold">

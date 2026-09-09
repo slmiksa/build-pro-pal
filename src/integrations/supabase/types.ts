@@ -64,18 +64,21 @@ export type Database = {
           conversation_id: string
           created_at: string
           last_read_at: string
+          pinned: boolean
           user_id: string
         }
         Insert: {
           conversation_id: string
           created_at?: string
           last_read_at?: string
+          pinned?: boolean
           user_id: string
         }
         Update: {
           conversation_id?: string
           created_at?: string
           last_read_at?: string
+          pinned?: boolean
           user_id?: string
         }
         Relationships: [

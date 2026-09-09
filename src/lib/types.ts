@@ -79,6 +79,8 @@ export type Conversation = {
   name?: string | undefined;
   memberIds: UserId[];
   unread: number;
+  /** Pinned to the top of the list for the current user. */
+  pinned: boolean;
 };
 
 export type AuditType =
