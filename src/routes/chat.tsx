@@ -65,10 +65,11 @@ function ChatPage() {
     startDirect,
     startDirectByEmail,
     createGroup,
+    createInvite,
     forwardMessage,
-    isAdmin,
     log,
   } = useApp();
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [viewing, setViewing] = useState<Message | null>(null);
