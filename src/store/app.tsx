@@ -673,7 +673,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { id: data.id, error: null };
     },
-    [currentUserId, isAdmin, log, refresh],
+    [currentUserId, log, refresh],
+
   );
 
   const updateGroupMembers = useCallback<Ctx["updateGroupMembers"]>(
