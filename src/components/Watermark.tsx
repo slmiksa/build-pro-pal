@@ -19,7 +19,7 @@ export function Watermark({ label }: { label: string }) {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-[70] overflow-hidden opacity-[0.15]"
+      className="pointer-events-none fixed inset-0 z-[55] overflow-hidden opacity-[0.15]"
     >
       <div className="flex h-[130%] w-[130%] -translate-x-[10%] -translate-y-[10%] flex-col justify-around">
         {rows.map((_, i) => (
