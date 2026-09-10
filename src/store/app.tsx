@@ -472,7 +472,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { event: "*", schema: "public", table: "conversation_members" },
         bump,
       )
-      .on("postgres_changes", { event: "*", schema: "public", table: "audit_events" }, bump)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "audit_events" },
+        onAudit as never,
+      )
       .subscribe();
     return () => {
       if (timer) clearTimeout(timer);
