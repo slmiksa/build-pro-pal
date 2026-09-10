@@ -50,7 +50,7 @@ export function AppShell({
     <div className="flex min-h-screen w-full bg-background">
       <div className="relative flex min-h-screen w-full overflow-hidden bg-background">
         {/* Desktop side navigation */}
-        <aside className="hidden w-56 shrink-0 flex-col gap-0.5 border-e border-border bg-surface p-3 md:flex">
+        <aside className="hidden w-48 shrink-0 flex-col gap-0.5 border-e border-border bg-surface p-3 md:flex">
           <div className="mb-3 flex items-center gap-2 px-2">
             <img src="/logo.png" alt="شعار درع" width={26} height={26} className="size-[26px]" />
             <span className="font-display text-base font-semibold">درع</span>

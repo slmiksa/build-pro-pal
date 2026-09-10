@@ -336,7 +336,7 @@ function ChatPage() {
               >
                 <span className="relative shrink-0">
                   <span
-                    className="flex size-12 items-center justify-center rounded-full text-[13px] font-bold text-primary-foreground"
+                    className="flex size-11 items-center justify-center rounded-full text-[12px] font-bold text-primary-foreground"
                     style={{
                       backgroundColor:
                         c.kind === "group" ? "#0ea5a5" : peer?.color,

@@ -101,11 +101,11 @@ export function MessageItem({
         </div>
       )}
 
-      <div className="max-w-[min(560px,85%)]">
+      <div className="max-w-[min(440px,80%)]">
         <div
           onCopy={guardCopy}
           className={cn(
-            "relative px-4 py-3 text-[15px] leading-7",
+            "relative px-3 py-2 text-[14px] leading-6",
             message.policy.allowCopy ? "select-text" : "no-leak",
             mine
               ? "rounded-2xl rounded-tl-md bg-bubble-out text-bubble-out-foreground shadow-[0_8px_20px_-10px_rgba(18,185,129,0.55)]"
