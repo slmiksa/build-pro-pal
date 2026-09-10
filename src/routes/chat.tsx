@@ -31,6 +31,7 @@ import { formatTime, initials, relative } from "@/lib/format";
 import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { isExpired, useApp } from "@/store/app";
+import { useCaptureWatch } from "@/hooks/use-capture-watch";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -80,6 +81,7 @@ function ChatPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [forwarding, setForwarding] = useState<Message | null>(null);
+  const [membersOpen, setMembersOpen] = useState(false);
 
   const endRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -250,6 +252,23 @@ function ChatPage() {
   };
 
   const other = active ? userById(active.memberIds.find((id) => id !== currentUserId) ?? "") : null;
+
+  // Screenshot / recording detection inside a conversation (files opened in the
+  // protected viewer are watched there with the file name attached).
+  useCaptureWatch({
+    enabled: Boolean(active) && !viewing,
+    onAttempt: (reason) => {
+      if (!active) return;
+      toast.error("سُجلت محاولة التقاط شاشة", {
+        description: "تم إبلاغ أعضاء المحادثة المعنيين باسمك ووقت المحاولة.",
+      });
+      void log("screenshot_attempt", `${reason} داخل «${conversationTitle(active)}»`, {
+        conversationId: active.id,
+      });
+    },
+  });
+
+
 
   const listPane = (
     <aside
@@ -424,28 +443,37 @@ function ChatPage() {
             >
               <ChevronRight className="size-5" />
             </button>
-            <span
-              className="flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-primary-foreground"
-              style={{
-                backgroundColor: active.kind === "group" ? "#0ea5a5" : other?.color,
-              }}
+            <button
+              type="button"
+              onClick={() => setMembersOpen(true)}
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 text-start transition-colors hover:bg-surface-2"
+              aria-label="عرض أعضاء المحادثة"
             >
-              {active.kind === "group" ? (
-                <Users2 className="size-5" />
-              ) : (
-                initials(other?.name ?? "؟")
-              )}
-            </span>
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-[15px] font-semibold">{conversationTitle(active)}</h1>
-              <p className="truncate text-[11px] text-muted-foreground">
-                {active.kind === "group"
-                  ? `${active.memberIds.length} أعضاء`
-                  : other?.online
-                    ? "متصل الآن"
-                    : (other?.title ?? "")}
-              </p>
-            </div>
+              <span
+                className="flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-primary-foreground"
+                style={{
+                  backgroundColor: active.kind === "group" ? "#0ea5a5" : other?.color,
+                }}
+              >
+                {active.kind === "group" ? (
+                  <Users2 className="size-5" />
+                ) : (
+                  initials(other?.name ?? "؟")
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-semibold">
+                  {conversationTitle(active)}
+                </span>
+                <span className="block truncate text-[11px] text-muted-foreground">
+                  {active.kind === "group"
+                    ? `${active.memberIds.length} أعضاء · اضغط لعرضهم`
+                    : other?.online
+                      ? "متصل الآن"
+                      : (other?.title ?? "")}
+                </span>
+              </span>
+            </button>
             <span className="grid size-9 shrink-0 place-items-center rounded-full text-primary">
               <ShieldCheck className="size-[18px]" />
             </span>
@@ -521,6 +549,61 @@ function ChatPage() {
       />
 
       {viewing && <ProtectedViewer message={viewing} onClose={() => setViewing(null)} />}
+
+      <Dialog open={membersOpen} onOpenChange={setMembersOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users2 className="size-4 text-primary" /> أعضاء المحادثة
+            </DialogTitle>
+            <DialogDescription>
+              اضغط «مراسلة» لفتح محادثة خاصة مع أي عضو.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-80 space-y-1 overflow-y-auto">
+            {(active?.memberIds ?? []).map((id) => {
+              const u = userById(id);
+              const isMe = id === currentUserId;
+              return (
+                <div
+                  key={id}
+                  className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-surface-2"
+                >
+                  <span
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground"
+                    style={{ backgroundColor: u?.color ?? "#0ea5a5" }}
+                  >
+                    {initials(u?.name ?? "؟")}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">
+                      {u?.name ?? "عضو"} {isMe && "(أنت)"}
+                    </span>
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                      {u?.title ?? ""}
+                    </span>
+                  </span>
+                  {!isMe && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 shrink-0 rounded-full px-3 text-[12px]"
+                      onClick={() => {
+                        setMembersOpen(false);
+                        void beginChat(id);
+                      }}
+                    >
+                      مراسلة
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
 
       <Dialog open={Boolean(forwarding)} onOpenChange={(o) => !o && setForwarding(null)}>
         <DialogContent className="max-w-sm">

@@ -82,15 +82,46 @@ const toneBg = (tone: "danger" | "warn" | "info") =>
       : "bg-primary/12 text-primary";
 
 function AuditPage() {
-  const { audit, messages, currentUserId, userById } = useApp();
-  const [tab, setTab] = useState<"mine" | "files">("files");
+  const {
+    audit,
+    messages,
+    currentUserId,
+    userById,
+    isAdmin,
+    users,
+    conversations,
+    conversationTitle,
+  } = useApp();
+  const [tab, setTab] = useState<"mine" | "files" | "all">("files");
   const [filter, setFilter] = useState<"all" | AuditType>("all");
+  const [member, setMember] = useState<"all" | string>("all");
 
   /* Events caused by me */
   const myActivity = useMemo(
     () => audit.filter((e) => e.actorId === currentUserId),
     [audit, currentUserId],
   );
+
+  /* Admin view: every event, optionally scoped to one member */
+  const allRows = useMemo(() => {
+    let list = audit;
+    if (member !== "all") list = list.filter((e) => e.actorId === member);
+    if (filter !== "all") list = list.filter((e) => e.type === filter);
+    return list;
+  }, [audit, member, filter]);
+
+  const describe = (e: AuditEvent) => {
+    const msg = e.messageId ? messages.find((m) => m.id === e.messageId) : undefined;
+    const conv = (e.conversationId ?? msg?.conversationId)
+      ? conversations.find((c) => c.id === (e.conversationId ?? msg?.conversationId))
+      : undefined;
+    return {
+      file: msg?.attachment?.name ?? "",
+      where: conv ? conversationTitle(conv) : "",
+      owner: msg ? (userById(msg.senderId)?.name ?? "") : "",
+    };
+  };
+
 
   /* My own files (messages with attachments that I sent) + every event on them */
   const myFiles = useMemo(() => {
@@ -180,7 +211,8 @@ function AuditPage() {
             [
               { key: "files", label: "ملفاتي ومن فتحها" },
               { key: "mine", label: "نشاطي" },
-            ] as const
+              ...(isAdmin ? [{ key: "all", label: "سجل كل الأعضاء" }] : []),
+            ] as { key: "files" | "mine" | "all"; label: string }[]
           ).map((t) => (
             <button
               key={t.key}
@@ -198,7 +230,82 @@ function AuditPage() {
           ))}
         </div>
 
-        {tab === "files" ? (
+        {tab === "all" && isAdmin ? (
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={member}
+                onChange={(e) => setMember(e.target.value)}
+                className="h-8 rounded-lg border border-border bg-surface px-2 text-[12.5px] font-medium"
+              >
+                <option value="all">كل العضويات</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} · {u.email}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as "all" | AuditType)}
+                className="h-8 rounded-lg border border-border bg-surface px-2 text-[12.5px] font-medium"
+              >
+                <option value="all">كل الأحداث</option>
+                {(Object.keys(meta) as AuditType[]).map((k) => (
+                  <option key={k} value={k}>
+                    {meta[k].label}
+                  </option>
+                ))}
+              </select>
+              <span className="text-[11.5px] text-muted-foreground">
+                {allRows.length} حدث
+              </span>
+            </div>
+
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+              {allRows.map((e) => {
+                const m = meta[e.type];
+                const actor = userById(e.actorId);
+                const d = describe(e);
+                return (
+                  <li key={e.id} className="flex items-center gap-2.5 px-3 py-2.5">
+                    <span
+                      className={cn(
+                        "grid size-8 shrink-0 place-items-center rounded-full",
+                        toneBg(m.tone),
+                      )}
+                    >
+                      <m.icon className="size-4" strokeWidth={2.25} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] font-semibold">
+                        {m.label} — {actor?.name ?? "مستخدم"}
+                      </div>
+                      <p className="truncate text-[11.5px] text-muted-foreground">
+                        {[
+                          d.file && `الملف: ${d.file}`,
+                          d.where && `في: ${d.where}`,
+                          d.owner && `صاحب الملف: ${d.owner}`,
+                          e.detail,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    <time className="shrink-0 text-[10.5px] text-muted-foreground">
+                      {formatDateTime(e.at)}
+                    </time>
+                  </li>
+                );
+              })}
+              {allRows.length === 0 && (
+                <li className="px-4 py-8 text-center text-[13px] text-muted-foreground">
+                  لا توجد أحداث بهذا التصنيف.
+                </li>
+              )}
+            </ul>
+          </div>
+        ) : tab === "files" ? (
           <div className="space-y-2">
             {myFiles.length === 0 && (
               <p className="rounded-xl border border-border bg-surface px-4 py-8 text-center text-[13px] text-muted-foreground">

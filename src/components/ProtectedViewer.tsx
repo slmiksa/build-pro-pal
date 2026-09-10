@@ -6,6 +6,7 @@ import { Watermark } from "@/components/Watermark";
 import { DocumentRender } from "@/components/DocumentRender";
 import { PolicyBadges } from "@/components/PolicyBadges";
 import { useApp } from "@/store/app";
+import { useCaptureWatch } from "@/hooks/use-capture-watch";
 import type { Message } from "@/lib/types";
 
 export function ProtectedViewer({
@@ -15,7 +16,8 @@ export function ProtectedViewer({
   message: Message;
   onClose: () => void;
 }) {
-  const { currentUser, log, fetchAttachment } = useApp();
+  const { currentUser, log, fetchAttachment, conversations, conversationTitle } =
+    useApp();
   const [attempts, setAttempts] = useState(0);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
@@ -23,6 +25,31 @@ export function ProtectedViewer({
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const att = message.attachment;
   const policy = message.policy;
+
+  const conv = conversations.find((c) => c.id === message.conversationId);
+  const where = conv ? conversationTitle(conv) : "";
+
+  // Screenshot / recording detection while a protected file is open.
+  useCaptureWatch({
+    enabled: true,
+    onAttempt: (reason) => {
+      setAttempts((n) => n + 1);
+      toast.error("سُجلت محاولة التقاط شاشة", {
+        description: `أُبلغ مرسل الملف «${att?.name ?? "مرفق"}» باسمك ووقت المحاولة.`,
+      });
+      void log(
+        "screenshot_attempt",
+        `${reason} أثناء عرض «${att?.name ?? "مرفق"}»${where ? ` في ${where}` : ""}`,
+        {
+          actorId: currentUser?.id,
+          messageId: message.id,
+          conversationId: message.conversationId,
+        },
+      );
+    },
+  });
+
+
 
   useEffect(() => {
     const onCopy = (e: ClipboardEvent) => {
