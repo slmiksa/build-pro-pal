@@ -1008,6 +1008,64 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [users, log, refresh],
   );
 
+  const deleteMember = useCallback<Ctx["deleteMember"]>(
+    async (id) => {
+      const user = users.find((u) => u.id === id);
+      const { error } = await supabase.rpc("admin_delete_member", {
+        _user_id: id,
+      });
+      if (error) {
+        if (error.message.includes("forbidden")) return "هذه العملية للمسؤول فقط";
+        if (error.message.includes("cannot_delete_self"))
+          return "لا يمكنك حذف حسابك الخاص";
+        return "تعذّر حذف العضو";
+      }
+      await log("member_disabled", `حذف حساب ${user?.name ?? id} نهائياً`);
+      await refresh();
+      return null;
+    },
+    [users, log, refresh],
+  );
+
+  const updateMyProfile = useCallback<Ctx["updateMyProfile"]>(
+    async (patch) => {
+      const me = currentUserRef.current;
+      if (!me) return "لا توجد جلسة";
+      const update: {
+        name?: string;
+        title?: string;
+        avatar_path?: string;
+      } = {};
+      if (patch.name !== undefined && patch.name.trim()) update.name = patch.name.trim();
+      if (patch.title !== undefined) update.title = patch.title.trim();
+
+      if (patch.avatar) {
+        const type = (patch.avatar as File).type || "image/jpeg";
+        const ext = type.includes("png")
+          ? "png"
+          : type.includes("webp")
+            ? "webp"
+            : "jpg";
+        const path = `${me}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .upload(path, patch.avatar, { contentType: type, upsert: true });
+        if (upErr) return "تعذّر رفع الصورة";
+        update.avatar_path = path;
+      }
+
+      if (Object.keys(update).length === 0) return null;
+      const { error } = await supabase
+        .from("profiles")
+        .update(update as never)
+        .eq("id", me);
+      if (error) return "تعذّر حفظ الملف الشخصي";
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
   const setDirectoryFlags = useCallback<Ctx["setDirectoryFlags"]>(
     async (id, patch) => {
       const user = users.find((u) => u.id === id);
