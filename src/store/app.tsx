@@ -31,6 +31,7 @@ import type {
  */
 
 const BUCKET = "attachments";
+const AVATAR_BUCKET = "avatars";
 const PALETTE = [
   "oklch(0.72 0.13 165)",
   "oklch(0.7 0.14 250)",
@@ -118,6 +119,12 @@ type Ctx = {
     password: string,
   ) => Promise<string | null>;
   toggleMemberDisabled: (id: UserId) => Promise<void>;
+  deleteMember: (id: UserId) => Promise<string | null>;
+  updateMyProfile: (patch: {
+    name?: string | undefined;
+    title?: string | undefined;
+    avatar?: File | Blob | undefined;
+  }) => Promise<string | null>;
   setDirectoryFlags: (
     id: UserId,
     patch: { canBrowseDirectory?: boolean; hiddenInDirectory?: boolean },
