@@ -550,6 +550,61 @@ function ChatPage() {
 
       {viewing && <ProtectedViewer message={viewing} onClose={() => setViewing(null)} />}
 
+      <Dialog open={membersOpen} onOpenChange={setMembersOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users2 className="size-4 text-primary" /> أعضاء المحادثة
+            </DialogTitle>
+            <DialogDescription>
+              اضغط «مراسلة» لفتح محادثة خاصة مع أي عضو.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-80 space-y-1 overflow-y-auto">
+            {(active?.memberIds ?? []).map((id) => {
+              const u = userById(id);
+              const isMe = id === currentUserId;
+              return (
+                <div
+                  key={id}
+                  className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-surface-2"
+                >
+                  <span
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground"
+                    style={{ backgroundColor: u?.color ?? "#0ea5a5" }}
+                  >
+                    {initials(u?.name ?? "؟")}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">
+                      {u?.name ?? "عضو"} {isMe && "(أنت)"}
+                    </span>
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                      {u?.title ?? ""}
+                    </span>
+                  </span>
+                  {!isMe && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 shrink-0 rounded-full px-3 text-[12px]"
+                      onClick={() => {
+                        setMembersOpen(false);
+                        void beginChat(id);
+                      }}
+                    >
+                      مراسلة
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+
       <Dialog open={Boolean(forwarding)} onOpenChange={(o) => !o && setForwarding(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
