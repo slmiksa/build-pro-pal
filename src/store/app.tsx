@@ -237,18 +237,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       setIsAdmin(roleByUser.get(me) === "admin");
 
-      const loadedUsers: User[] = (profilesRes.data ?? []).map((p) => ({
+      const profileRows = (profilesRes.data ?? []) as Array<
+        Record<string, unknown> & { id: string }
+      >;
+      const avatarPaths = profileRows
+        .map((p) => (typeof p['avatar_path'] === "string" ? (p['avatar_path'] as string) : ""))
+        .filter(Boolean);
+      const avatarUrls = new Map<string, string>();
+      if (avatarPaths.length) {
+        const { data: signedAvatars } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .createSignedUrls(avatarPaths, 3600);
+        for (const s of signedAvatars ?? []) {
+          if (s.path && s.signedUrl) avatarUrls.set(s.path, s.signedUrl);
+        }
+      }
+
+      const loadedUsers: User[] = profileRows.map((p) => {
+        const avatarPath =
+          typeof p['avatar_path'] === "string" && p['avatar_path'] ? (p['avatar_path'] as string) : undefined;
+        return {
           id: p.id,
-          name: p.name || p.email,
-          email: p.email,
-          title: p.title,
+          name: (p['name'] as string) || (p['email'] as string),
+          email: p['email'] as string,
+          title: p['title'] as string,
           role: roleByUser.get(p.id) ?? "manager",
-          online: p.online,
-          disabled: p.disabled,
-          canBrowseDirectory: p.can_browse_directory ?? true,
-          hiddenInDirectory: p.hidden_in_directory ?? false,
-          color: p.color || colorFor(p.id),
-        }));
+          online: p['online'] as boolean,
+          disabled: p['disabled'] as boolean,
+          canBrowseDirectory: (p['can_browse_directory'] as boolean) ?? true,
+          hiddenInDirectory: (p['hidden_in_directory'] as boolean) ?? false,
+          color: (p['color'] as string) || colorFor(p.id),
+          avatarPath,
+          avatarUrl: avatarPath ? avatarUrls.get(avatarPath) : undefined,
+        };
+      });
 
       // Never strand an authenticated user on the loading screen if a profile
       // read is temporarily unavailable. The database profile replaces this
