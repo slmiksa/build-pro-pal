@@ -131,14 +131,16 @@ export function AppShell({
         <main
           className={cn(
             "min-h-0 flex-1",
-            padded ? "overflow-x-hidden overflow-y-auto px-5 pt-3 pb-4" : "flex flex-col overflow-hidden",
+            padded
+              ? "mx-auto w-full max-w-5xl overflow-x-hidden overflow-y-auto px-5 pt-3 pb-4 lg:px-8"
+              : "mx-auto flex w-full max-w-5xl flex-col overflow-hidden",
           )}
         >
           {children}
         </main>
 
         {!hideTabs && (
-          <nav className="pb-safe shrink-0 bg-background px-4 pt-1.5">
+          <nav className="pb-safe shrink-0 bg-background px-4 pt-1.5 lg:hidden">
             <div className="grid grid-cols-3 rounded-[24px] bg-surface-2/90 p-1">
               {tabs.map((t) => (
                 <Link
