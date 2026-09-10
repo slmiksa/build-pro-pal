@@ -31,6 +31,7 @@ import { formatTime, initials, relative } from "@/lib/format";
 import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { isExpired, useApp } from "@/store/app";
+import { useCaptureWatch } from "@/hooks/use-capture-watch";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
