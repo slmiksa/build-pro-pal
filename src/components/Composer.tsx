@@ -208,24 +208,50 @@ export function Composer({ conversationId }: { conversationId: string }) {
       recRef.current?.stop();
       return;
     }
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      toast.error("التسجيل الصوتي غير مدعوم في هذا المتصفح");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
+      // Safari records mp4, Chrome/Firefox webm — pick a type the browser supports
+      // so the blob and its file name always match the real container.
+      const candidates = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+        "audio/ogg;codecs=opus",
+      ];
+      const mimeType = candidates.find((t) => MediaRecorder.isTypeSupported?.(t));
+      const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       const chunks: Blob[] = [];
-      rec.ondataavailable = (e) => chunks.push(e.data);
+      rec.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
       rec.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunks, { type: "audio/webm" });
+        const type = (rec.mimeType || mimeType || "audio/webm").split(";")[0]!;
+        const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
+        const blob = new Blob(chunks, { type });
+        setRecording(false);
+        if (blob.size < 1024) {
+          toast.error("التسجيل قصير جدًا، حاول مرة أخرى");
+          return;
+        }
         setPendingFile(blob);
         setPending({
           id: `voice-${Date.now()}`,
           kind: "audio",
-          name: "ملاحظة صوتية.webm",
-          mime: "audio/webm",
+          name: `ملاحظة صوتية.${ext}`,
+          mime: type,
           size: `${Math.max(1, Math.round(blob.size / 1024))} ك.ب`,
           durationSec: Math.max(1, Math.round((Date.now() - startedAt.current) / 1000)),
         });
+      };
+      rec.onerror = () => {
+        stream.getTracks().forEach((t) => t.stop());
         setRecording(false);
+        toast.error("تعذّر التسجيل الصوتي");
       };
       startedAt.current = Date.now();
       recRef.current = rec;
@@ -235,6 +261,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
       toast.error("لم نتمكن من الوصول للميكروفون");
     }
   };
+
 
   const addEmoji = (emoji: string) => {
     setText((t) => t + emoji);
@@ -326,9 +353,13 @@ export function Composer({ conversationId }: { conversationId: string }) {
             onChange={(e) => onTextChange(e.target.value)}
             ref={inputRef}
             onKeyDown={(e) => {
-              // Enter = سطر جديد. الإرسال بالزر أو ⌘/Ctrl + Enter.
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              // Enter = إرسال. Shift+Enter = سطر جديد.
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
+                if (mentionMatches.length > 0 && mentionQuery !== null) {
+                  pickMention(mentionMatches[0]!);
+                  return;
+                }
                 send();
               }
             }}
