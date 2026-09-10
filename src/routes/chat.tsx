@@ -669,7 +669,14 @@ function NewChatDialog({
   inviteEmail: string;
   setInviteEmail: (v: string) => void;
   onSubmitInvite: () => void | Promise<void>;
-  people: { id: string; name: string; title: string; email: string; color: string }[];
+  people: {
+    id: string;
+    name: string;
+    title: string;
+    email: string;
+    color: string;
+    avatarUrl?: string | undefined;
+  }[];
   busy: boolean;
 }) {
   const toggle = (id: string) =>
