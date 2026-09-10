@@ -81,6 +81,9 @@ export type Message = {
   forwardedFrom?: string | undefined;
 };
 
+/** Role of a member inside one conversation. */
+export type ConvRole = "owner" | "moderator" | "member";
+
 export type Conversation = {
   id: string;
   kind: "direct" | "group";
@@ -89,7 +92,21 @@ export type Conversation = {
   unread: number;
   /** Pinned to the top of the list for the current user. */
   pinned: boolean;
+  /** Creator of the conversation. */
+  createdBy: UserId;
+  /** Group picture stored in the private avatars bucket. */
+  avatarPath?: string | undefined;
+  avatarUrl?: string | undefined;
+  /** When true only the owner and moderators can send messages. */
+  locked: boolean;
+  /** Message pinned to the top of the thread. */
+  pinnedMessageId?: string | undefined;
+  /** Role of every member inside this conversation. */
+  roles: Record<UserId, ConvRole>;
+  /** Role of the signed-in user inside this conversation. */
+  myRole: ConvRole;
 };
+
 
 export type AuditType =
   | "file_open"
