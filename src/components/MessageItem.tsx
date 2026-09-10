@@ -40,12 +40,18 @@ export function MessageItem({
   showSender,
   onOpen,
   onForward,
+  onPin,
+  pinned,
 }: {
   message: Message;
   showSender: boolean;
   onOpen: (m: Message) => void;
   onForward?: ((m: Message) => void) | undefined;
+  /** Provided to group owners/moderators to pin or unpin this message. */
+  onPin?: ((m: Message) => void) | undefined;
+  pinned?: boolean | undefined;
 }) {
+
   const { currentUserId, userById, revokeMessage, log } = useApp();
   const mine = message.senderId === currentUserId;
   const sender = userById(message.senderId);
