@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { formatDateTime, initials } from "@/lib/format";
 import { useApp } from "@/store/app";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -213,12 +214,12 @@ function AdminPage() {
                   key={u.id}
                   className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-3.5 px-4 py-4"
                 >
-                  <span
-                    className="flex size-10 shrink-0 items-center justify-center rounded-2xl text-[12px] font-bold text-background"
-                    style={{ backgroundColor: u.color }}
-                  >
-                    {initials(u.name)}
-                  </span>
+                  <UserAvatar
+                    name={u.name}
+                    color={u.color}
+                    avatarUrl={u.avatarUrl}
+                    className="size-10 rounded-2xl text-[12px]"
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="truncate text-[14px] font-semibold">

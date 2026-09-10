@@ -25,6 +25,7 @@ import { countdown, formatTime, initials } from "@/lib/format";
 import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
+import { UserAvatar } from "@/components/UserAvatar";
 
 const kindIcon = {
   pdf: FileText,
@@ -89,12 +90,12 @@ export function MessageItem({
     >
       {showSender && !mine && (
         <div className="mb-1.5 flex items-center gap-2 ps-1">
-          <span
-            className="flex size-6 items-center justify-center rounded-full text-[9px] font-bold text-primary-foreground"
-            style={{ backgroundColor: sender?.color }}
-          >
-            {initials(sender?.name ?? "؟")}
-          </span>
+          <UserAvatar
+            name={sender?.name ?? "؟"}
+            color={sender?.color}
+            avatarUrl={sender?.avatarUrl}
+            className="size-6 text-[9px]"
+          />
           <span className="text-[11px] font-medium text-muted-foreground">
             {sender?.name}
           </span>

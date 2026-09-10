@@ -6,6 +6,7 @@ import { useAppHeight } from "@/hooks/use-app-height";
 import { initials } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
+import { UserAvatar } from "@/components/UserAvatar";
 
 const tabs = [
   { to: "/chat", label: "المحادثات", icon: MessagesSquare },
@@ -84,12 +85,12 @@ export function AppShell({
                 </div>
                 {showProfile && (
                   <div className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background p-1">
-                    <span
-                      className="flex size-8 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground"
-                      style={{ backgroundColor: currentUser.color }}
-                    >
-                      {initials(currentUser.name)}
-                    </span>
+                    <UserAvatar
+                      name={currentUser.name}
+                      color={currentUser.color}
+                      avatarUrl={currentUser.avatarUrl}
+                      className="size-8 text-[11px]"
+                    />
                     <button
                       type="button"
                       aria-label="خروج"

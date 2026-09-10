@@ -32,6 +32,7 @@ import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { isExpired, useApp } from "@/store/app";
 import { useCaptureWatch } from "@/hooks/use-capture-watch";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -317,12 +318,12 @@ function ChatPage() {
                   onClick={() => void beginChat(u.id)}
                   className="flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors hover:bg-surface-2/70"
                 >
-                  <span
-                    className="flex size-10 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground"
-                    style={{ backgroundColor: u.color }}
-                  >
-                    {initials(u.name)}
-                  </span>
+                  <UserAvatar
+                    name={u.name}
+                    color={u.color}
+                    avatarUrl={u.avatarUrl}
+                    className="size-10 text-[11px]"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{u.name}</span>
                     <span className="block truncate text-[11px] text-muted-foreground">
@@ -351,18 +352,15 @@ function ChatPage() {
                 className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-start"
               >
                 <span className="relative shrink-0">
-                  <span
-                    className="flex size-11 items-center justify-center rounded-full text-[12px] font-bold text-primary-foreground"
-                    style={{
-                      backgroundColor: c.kind === "group" ? "#0ea5a5" : peer?.color,
-                    }}
-                  >
-                    {c.kind === "group" ? (
-                      <Users2 className="size-5" />
-                    ) : (
-                      initials(peer?.name ?? "؟")
-                    )}
-                  </span>
+                  <UserAvatar
+                    name={peer?.name ?? "؟"}
+                    color={c.kind === "group" ? "#0ea5a5" : peer?.color}
+                    avatarUrl={c.kind === "group" ? undefined : peer?.avatarUrl}
+                    className="size-11 text-[12px]"
+                    fallback={
+                      c.kind === "group" ? <Users2 className="size-5" /> : undefined
+                    }
+                  />
                   {c.kind === "direct" && peer?.online && (
                     <span className="absolute -bottom-0.5 -start-0.5 size-3.5 rounded-full border-[3px] border-surface bg-primary" />
                   )}
@@ -449,18 +447,15 @@ function ChatPage() {
               className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 text-start transition-colors hover:bg-surface-2"
               aria-label="عرض أعضاء المحادثة"
             >
-              <span
-                className="flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-primary-foreground"
-                style={{
-                  backgroundColor: active.kind === "group" ? "#0ea5a5" : other?.color,
-                }}
-              >
-                {active.kind === "group" ? (
-                  <Users2 className="size-5" />
-                ) : (
-                  initials(other?.name ?? "؟")
-                )}
-              </span>
+              <UserAvatar
+                name={other?.name ?? "؟"}
+                color={active.kind === "group" ? "#0ea5a5" : other?.color}
+                avatarUrl={active.kind === "group" ? undefined : other?.avatarUrl}
+                className="size-10 text-xs"
+                fallback={
+                  active.kind === "group" ? <Users2 className="size-5" /> : undefined
+                }
+              />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[15px] font-semibold">
                   {conversationTitle(active)}
@@ -569,12 +564,12 @@ function ChatPage() {
                   key={id}
                   className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-surface-2"
                 >
-                  <span
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground"
-                    style={{ backgroundColor: u?.color ?? "#0ea5a5" }}
-                  >
-                    {initials(u?.name ?? "؟")}
-                  </span>
+                  <UserAvatar
+                    name={u?.name ?? "؟"}
+                    color={u?.color}
+                    avatarUrl={u?.avatarUrl}
+                    className="size-9 text-[11px]"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">
                       {u?.name ?? "عضو"} {isMe && "(أنت)"}
@@ -742,12 +737,12 @@ function NewChatDialog({
                     groupMembers.includes(u.id) ? "bg-primary/10" : "hover:bg-surface-2",
                   )}
                 >
-                  <span
-                    className="flex size-7 items-center justify-center rounded-lg text-[10px] font-bold text-primary-foreground"
-                    style={{ backgroundColor: u.color }}
-                  >
-                    {initials(u.name)}
-                  </span>
+                  <UserAvatar
+                    name={u.name}
+                    color={u.color}
+                    avatarUrl={u.avatarUrl}
+                    className="size-7 rounded-lg text-[10px]"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{u.name}</span>
                     <span className="block truncate text-[10px] text-muted-foreground">
