@@ -477,9 +477,9 @@ function ChatPage() {
               aria-label="عرض أعضاء المحادثة"
             >
               <UserAvatar
-                name={other?.name ?? "؟"}
+                name={active.kind === "group" ? conversationTitle(active) : (other?.name ?? "؟")}
                 color={active.kind === "group" ? "#0ea5a5" : other?.color}
-                avatarUrl={active.kind === "group" ? undefined : other?.avatarUrl}
+                avatarUrl={active.kind === "group" ? active.avatarUrl : other?.avatarUrl}
                 className="size-10 text-xs"
                 fallback={
                   active.kind === "group" ? <Users2 className="size-5" /> : undefined
@@ -491,17 +491,62 @@ function ChatPage() {
                 </span>
                 <span className="block truncate text-[11px] text-muted-foreground">
                   {active.kind === "group"
-                    ? `${active.memberIds.length} أعضاء · اضغط لعرضهم`
+                    ? `${active.memberIds.length} أعضاء${active.locked ? " · الإرسال مقفل" : ""} · اضغط لعرضهم`
                     : other?.online
                       ? "متصل الآن"
                       : (other?.title ?? "")}
                 </span>
               </span>
             </button>
+            {isGroup && canManage && (
+              <button
+                type="button"
+                onClick={() => {
+                  setNameDraft(active.name ?? "");
+                  setSettingsOpen(true);
+                }}
+                aria-label="إعدادات المجموعة"
+                className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-surface-2"
+              >
+                <Settings2 className="size-[18px]" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(active.id)}
+              aria-label="حذف المحادثة"
+              className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-surface-2 hover:text-destructive"
+            >
+              <Trash2 className="size-[18px]" />
+            </button>
             <span className="grid size-9 shrink-0 place-items-center rounded-full text-primary">
               <ShieldCheck className="size-[18px]" />
             </span>
           </header>
+
+          {pinnedMsg && (
+            <div className="flex shrink-0 items-center gap-2 border-b border-border bg-surface-2/70 px-4 py-2 text-[12px]">
+              <Pin className="size-3.5 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1 truncate">
+                {pinnedMsg.text ?? pinnedMsg.attachment?.name ?? "رسالة مثبتة"}
+              </span>
+              {canManage && (
+                <button
+                  type="button"
+                  className="shrink-0 text-[11px] font-semibold text-muted-foreground hover:text-destructive"
+                  onClick={() =>
+                    void run(
+                      () => updateGroup(active.id, { pinnedMessageId: null }),
+                      "أُلغي التثبيت",
+                    )
+                  }
+                >
+                  إلغاء
+                </button>
+              )}
+            </div>
+          )}
+
 
           <div
             ref={scrollRef}
