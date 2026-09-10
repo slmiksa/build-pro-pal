@@ -40,15 +40,15 @@ export function AppShell({
 
   if (!currentUser) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+      <div className="app-viewport flex items-center justify-center text-sm text-muted-foreground">
         جارٍ تحميل الحساب…
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      <div className="relative flex min-h-screen w-full overflow-hidden bg-background">
+    <div className="app-viewport flex min-h-0 w-full bg-background">
+      <div className="relative flex h-full min-h-0 w-full overflow-hidden bg-background">
         {/* Desktop side navigation */}
         <aside className="hidden w-48 shrink-0 flex-col gap-0.5 border-e border-border bg-surface p-3 md:flex">
           <div className="mb-3 flex items-center gap-2 px-2">
@@ -70,7 +70,7 @@ export function AppShell({
           ))}
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {header ?? (
           <header className="pt-safe shrink-0 border-b border-border bg-surface px-4 pt-2.5 pb-2.5 md:px-5 md:py-2.5">
             <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
@@ -123,7 +123,7 @@ export function AppShell({
         </main>
 
         {!hideTabs && (
-          <nav className="pb-safe shrink-0 bg-background px-4 pt-1.5 md:hidden">
+          <nav className="pb-safe shrink-0 border-t border-border bg-background px-3 pt-1.5 md:hidden">
             <div className="grid grid-cols-3 rounded-[24px] bg-surface-2/90 p-1">
               {tabs.map((t) => (
                 <Link

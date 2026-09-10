@@ -181,7 +181,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
   const activeCount = policyItems(policy).filter((i) => i.danger).length;
 
   return (
-    <div className="pb-safe shrink-0 bg-background px-5 pt-3">
+    <div className="pb-safe relative z-10 shrink-0 border-t border-border bg-background px-2.5 pt-2 sm:px-4 md:px-5">
       {mentionMatches.length > 0 && (
         <div className="mb-2 max-h-52 overflow-y-auto rounded-2xl border border-border bg-background p-1 shadow-lg">
           <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground">
@@ -231,14 +231,14 @@ export function Composer({ conversationId }: { conversationId: string }) {
         </div>
       )}
 
-      <div className="flex items-end gap-2">
+      <div className="flex min-w-0 items-end gap-1.5 sm:gap-2">
         <div className="flex min-w-0 flex-1 items-end gap-1 rounded-[26px] bg-surface-2 px-1.5 py-1">
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-9 shrink-0 rounded-full text-muted-foreground"
+                className="hidden size-9 shrink-0 rounded-full text-muted-foreground sm:inline-flex"
                 aria-label="إيموجي"
               >
                 <Smile className="size-[18px]" />
@@ -279,7 +279,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
                   ? "اكتب رسالة محمية… استخدم @ لذكر عضو"
                   : "اكتب رسالة محمية…"
             }
-            className="max-h-28 min-h-9 min-w-0 flex-1 resize-none border-none bg-transparent px-1 py-2 text-base font-medium shadow-none focus-visible:ring-0"
+            className="max-h-28 min-h-9 min-w-0 flex-1 resize-none border-none bg-transparent px-1 py-2 text-[15px] font-medium shadow-none focus-visible:ring-0"
           />
 
           <input

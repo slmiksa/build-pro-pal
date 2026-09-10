@@ -121,6 +121,7 @@
     color-scheme: light;
     -webkit-tap-highlight-color: transparent;
     height: 100%;
+    width: 100%;
     overflow-x: hidden;
   }
 
@@ -133,6 +134,7 @@
     position: static;
     width: 100%;
     min-height: 100%;
+    max-width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
   }
@@ -175,6 +177,14 @@
   max-height: var(--app-h, 100dvh);
   width: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* App pages own their scroll regions; the document itself must never grow. */
+.app-viewport main,
+.app-viewport aside,
+.app-viewport section {
+  min-height: 0;
 }
 
 /* Soft elevated card used across the app surfaces. */

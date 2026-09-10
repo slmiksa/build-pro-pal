@@ -527,7 +527,7 @@ function ChatPage() {
       padded={false}
       hideTabs={Boolean(active)}
     >
-      <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="flex h-full min-h-0 flex-1 overflow-hidden">
         {listPane}
         {threadPane}
       </div>
