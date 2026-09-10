@@ -15,6 +15,10 @@ export type User = {
   /** Hidden from other members' directory lists. */
   hiddenInDirectory: boolean;
   color: string;
+  /** Storage path of the profile picture inside the private avatars bucket. */
+  avatarPath?: string | undefined;
+  /** Short-lived signed URL for the profile picture. */
+  avatarUrl?: string | undefined;
 };
 
 export type AttachmentKind = "image" | "pdf" | "doc" | "sheet" | "audio";

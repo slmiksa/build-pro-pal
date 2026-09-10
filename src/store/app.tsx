@@ -31,6 +31,7 @@ import type {
  */
 
 const BUCKET = "attachments";
+const AVATAR_BUCKET = "avatars";
 const PALETTE = [
   "oklch(0.72 0.13 165)",
   "oklch(0.7 0.14 250)",
@@ -118,6 +119,12 @@ type Ctx = {
     password: string,
   ) => Promise<string | null>;
   toggleMemberDisabled: (id: UserId) => Promise<void>;
+  deleteMember: (id: UserId) => Promise<string | null>;
+  updateMyProfile: (patch: {
+    name?: string | undefined;
+    title?: string | undefined;
+    avatar?: File | Blob | undefined;
+  }) => Promise<string | null>;
   setDirectoryFlags: (
     id: UserId,
     patch: { canBrowseDirectory?: boolean; hiddenInDirectory?: boolean },
@@ -230,18 +237,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       setIsAdmin(roleByUser.get(me) === "admin");
 
-      const loadedUsers: User[] = (profilesRes.data ?? []).map((p) => ({
+      const profileRows = (profilesRes.data ?? []) as Array<
+        Record<string, unknown> & { id: string }
+      >;
+      const avatarPaths = profileRows
+        .map((p) => (typeof p['avatar_path'] === "string" ? (p['avatar_path'] as string) : ""))
+        .filter(Boolean);
+      const avatarUrls = new Map<string, string>();
+      if (avatarPaths.length) {
+        const { data: signedAvatars } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .createSignedUrls(avatarPaths, 3600);
+        for (const s of signedAvatars ?? []) {
+          if (s.path && s.signedUrl) avatarUrls.set(s.path, s.signedUrl);
+        }
+      }
+
+      const loadedUsers: User[] = profileRows.map((p) => {
+        const avatarPath =
+          typeof p['avatar_path'] === "string" && p['avatar_path'] ? (p['avatar_path'] as string) : undefined;
+        return {
           id: p.id,
-          name: p.name || p.email,
-          email: p.email,
-          title: p.title,
+          name: (p['name'] as string) || (p['email'] as string),
+          email: p['email'] as string,
+          title: p['title'] as string,
           role: roleByUser.get(p.id) ?? "manager",
-          online: p.online,
-          disabled: p.disabled,
-          canBrowseDirectory: p.can_browse_directory ?? true,
-          hiddenInDirectory: p.hidden_in_directory ?? false,
-          color: p.color || colorFor(p.id),
-        }));
+          online: p['online'] as boolean,
+          disabled: p['disabled'] as boolean,
+          canBrowseDirectory: (p['can_browse_directory'] as boolean) ?? true,
+          hiddenInDirectory: (p['hidden_in_directory'] as boolean) ?? false,
+          color: (p['color'] as string) || colorFor(p.id),
+          avatarPath,
+          avatarUrl: avatarPath ? avatarUrls.get(avatarPath) : undefined,
+        };
+      });
 
       // Never strand an authenticated user on the loading screen if a profile
       // read is temporarily unavailable. The database profile replaces this
@@ -979,6 +1008,64 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [users, log, refresh],
   );
 
+  const deleteMember = useCallback<Ctx["deleteMember"]>(
+    async (id) => {
+      const user = users.find((u) => u.id === id);
+      const { error } = await supabase.rpc("admin_delete_member", {
+        _user_id: id,
+      });
+      if (error) {
+        if (error.message.includes("forbidden")) return "هذه العملية للمسؤول فقط";
+        if (error.message.includes("cannot_delete_self"))
+          return "لا يمكنك حذف حسابك الخاص";
+        return "تعذّر حذف العضو";
+      }
+      await log("member_disabled", `حذف حساب ${user?.name ?? id} نهائياً`);
+      await refresh();
+      return null;
+    },
+    [users, log, refresh],
+  );
+
+  const updateMyProfile = useCallback<Ctx["updateMyProfile"]>(
+    async (patch) => {
+      const me = currentUserRef.current;
+      if (!me) return "لا توجد جلسة";
+      const update: {
+        name?: string;
+        title?: string;
+        avatar_path?: string;
+      } = {};
+      if (patch.name !== undefined && patch.name.trim()) update.name = patch.name.trim();
+      if (patch.title !== undefined) update.title = patch.title.trim();
+
+      if (patch.avatar) {
+        const type = (patch.avatar as File).type || "image/jpeg";
+        const ext = type.includes("png")
+          ? "png"
+          : type.includes("webp")
+            ? "webp"
+            : "jpg";
+        const path = `${me}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .upload(path, patch.avatar, { contentType: type, upsert: true });
+        if (upErr) return "تعذّر رفع الصورة";
+        update.avatar_path = path;
+      }
+
+      if (Object.keys(update).length === 0) return null;
+      const { error } = await supabase
+        .from("profiles")
+        .update(update as never)
+        .eq("id", me);
+      if (error) return "تعذّر حفظ الملف الشخصي";
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
   const setDirectoryFlags = useCallback<Ctx["setDirectoryFlags"]>(
     async (id, patch) => {
       const user = users.find((u) => u.id === id);
@@ -1093,6 +1180,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addMember,
       resetMemberPassword,
       toggleMemberDisabled,
+      deleteMember,
+      updateMyProfile,
       setDirectoryFlags,
       createInvite,
     }),
@@ -1130,6 +1219,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addMember,
       resetMemberPassword,
       toggleMemberDisabled,
+      deleteMember,
+      updateMyProfile,
       setDirectoryFlags,
       createInvite,
     ],

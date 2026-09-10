@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Copy, Globe, KeyRound, Link2, Power, UserPlus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, Copy, Globe, KeyRound, Link2, Power, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { formatDateTime, initials } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { useApp } from "@/store/app";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -46,6 +47,9 @@ function AdminPage() {
     createInvite,
     resetMemberPassword,
     setDirectoryFlags,
+    deleteMember,
+    updateMyProfile,
+    currentUser,
     allowedDomains,
     setAllowedDomains,
   } = useApp();
@@ -64,11 +68,41 @@ function AdminPage() {
   const [busy, setBusy] = useState(false);
   const [domainsInput, setDomainsInput] = useState("");
   const [domainsBusy, setDomainsBusy] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileTitle, setProfileTitle] = useState("");
+  const [profileBusy, setProfileBusy] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [delTarget, setDelTarget] = useState<{ id: string; name: string } | null>(null);
   const domainsText = allowedDomains.join("، ");
 
   useEffect(() => {
     setDomainsInput(allowedDomains.join(", "));
   }, [allowedDomains]);
+
+  useEffect(() => {
+    setProfileName(currentUser?.name ?? "");
+    setProfileTitle(currentUser?.title ?? "");
+  }, [currentUser?.name, currentUser?.title]);
+
+  const saveProfile = async (avatar?: File) => {
+    setProfileBusy(true);
+    const err = await updateMyProfile({
+      name: profileName,
+      title: profileTitle,
+      avatar,
+    });
+    setProfileBusy(false);
+    if (err) toast.error(err);
+    else toast.success("تم حفظ الملف الشخصي");
+  };
+
+  const removeMember = async () => {
+    if (!delTarget) return;
+    const err = await deleteMember(delTarget.id);
+    if (err) toast.error(err);
+    else toast.success(`تم حذف ${delTarget.name}`);
+    setDelTarget(null);
+  };
 
   const domainAllowed = (value: string) => {
     if (allowedDomains.length === 0) return true;
@@ -213,12 +247,12 @@ function AdminPage() {
                   key={u.id}
                   className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-3.5 px-4 py-4"
                 >
-                  <span
-                    className="flex size-10 shrink-0 items-center justify-center rounded-2xl text-[12px] font-bold text-background"
-                    style={{ backgroundColor: u.color }}
-                  >
-                    {initials(u.name)}
-                  </span>
+                  <UserAvatar
+                    name={u.name}
+                    color={u.color}
+                    avatarUrl={u.avatarUrl}
+                    className="size-10 rounded-2xl text-[12px]"
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="truncate text-[14px] font-semibold">
@@ -239,7 +273,7 @@ function AdminPage() {
                       {u.email} · {u.title}
                     </div>
                   </div>
-                  <div className="col-span-2 grid min-w-0 grid-cols-2 gap-2">
+                  <div className="col-span-2 grid min-w-0 grid-cols-3 gap-2">
                   <Button
                     variant="secondary"
                     size="sm"
@@ -263,6 +297,16 @@ function AdminPage() {
 
                     <Power className="size-3.5" />
                     {u.disabled ? "تنشيط" : "تعطيل"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="min-w-0 rounded-2xl text-destructive shadow-none hover:bg-destructive/10 hover:text-destructive"
+                    disabled={!isAdmin || u.id === currentUser?.id}
+                    onClick={() => setDelTarget({ id: u.id, name: u.name })}
+                  >
+                    <Trash2 className="size-3.5" />
+                    <span className="truncate">حذف</span>
                   </Button>
                   </div>
                   <div className="col-span-2 space-y-2 rounded-2xl bg-surface-2/60 p-3">
@@ -376,6 +420,63 @@ function AdminPage() {
               </>
             )}
 
+
+            <div className="space-y-3 card-soft p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Camera className="size-4 text-primary" /> ملفي الشخصي
+              </div>
+              {currentUser && (
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    className="relative"
+                    onClick={() => avatarInputRef.current?.click()}
+                    aria-label="تغيير الصورة الشخصية"
+                  >
+                    <UserAvatar
+                      name={currentUser.name}
+                      color={currentUser.color}
+                      avatarUrl={currentUser.avatarUrl}
+                      className="size-14 text-sm"
+                    />
+                    <span className="absolute -bottom-1 -end-1 grid size-6 place-items-center rounded-full border border-border bg-background text-primary">
+                      <Camera className="size-3.5" />
+                    </span>
+                  </button>
+                  <p className="text-[11px] text-muted-foreground">
+                    اضغط على الصورة لاختيار صورة من جهازك. تظهر لأعضاء محادثاتك.
+                  </p>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = "";
+                      if (f) void saveProfile(f);
+                    }}
+                  />
+                </div>
+              )}
+              <Input
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                placeholder="الاسم"
+              />
+              <Input
+                value={profileTitle}
+                onChange={(e) => setProfileTitle(e.target.value)}
+                placeholder="المسمى الوظيفي"
+              />
+              <Button
+                className="w-full"
+                disabled={profileBusy}
+                onClick={() => void saveProfile()}
+              >
+                حفظ الملف الشخصي
+              </Button>
+            </div>
 
             <div className="space-y-3 card-soft p-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
@@ -493,6 +594,41 @@ function AdminPage() {
           >
             حفظ كلمة المرور
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={delTarget !== null}
+        onOpenChange={(o) => {
+          if (!o) setDelTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-right font-display">
+              حذف {delTarget?.name}
+            </DialogTitle>
+            <DialogDescription className="text-right">
+              سيُحذف الحساب نهائياً مع رسائله والمجموعات التي أنشأها، ولن
+              يستطيع الدخول مرة أخرى. إن أردت إيقافه فقط استخدم «تعطيل».
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="secondary"
+              className="rounded-2xl"
+              onClick={() => setDelTarget(null)}
+            >
+              إلغاء
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-2xl"
+              onClick={() => void removeMember()}
+            >
+              حذف نهائي
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </AppShell>
