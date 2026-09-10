@@ -84,10 +84,7 @@ function ChatPage() {
   const endRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const visible = useMemo(
-    () => messages.filter((m) => !isExpired(m)),
-    [messages],
-  );
+  const visible = useMemo(() => messages.filter((m) => !isExpired(m)), [messages]);
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
   const thread = visible.filter((m) => m.conversationId === activeId);
@@ -131,10 +128,6 @@ function ChatPage() {
     return undefined;
   }, [thread.length, activeId]);
 
-
-
-
-
   // Keep the newest message visible when the on-screen keyboard opens/closes.
   useEffect(() => {
     if (!activeId) return;
@@ -155,7 +148,6 @@ function ChatPage() {
       document.removeEventListener("focusin", toEnd);
     };
   }, [activeId]);
-
 
   const lastAt = (id: string) =>
     visible.filter((m) => m.conversationId === id).slice(-1)[0]?.createdAt ?? 0;
@@ -233,8 +225,6 @@ function ChatPage() {
     else toast.success("تمت إعادة التوجيه");
   };
 
-
-
   const beginChat = async (userId: string) => {
     const id = await startDirect(userId);
     if (!id) {
@@ -244,9 +234,7 @@ function ChatPage() {
     setActiveId(id);
   };
 
-  const other = active
-    ? userById(active.memberIds.find((id) => id !== currentUserId) ?? "")
-    : null;
+  const other = active ? userById(active.memberIds.find((id) => id !== currentUserId) ?? "") : null;
 
   const listPane = (
     <aside
@@ -302,9 +290,7 @@ function ChatPage() {
                     {initials(u.name)}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">
-                      {u.name}
-                    </span>
+                    <span className="block truncate text-sm font-medium">{u.name}</span>
                     <span className="block truncate text-[11px] text-muted-foreground">
                       {u.title}
                     </span>
@@ -315,12 +301,8 @@ function ChatPage() {
         )}
 
         {list.map((c) => {
-          const last = visible
-            .filter((m) => m.conversationId === c.id)
-            .slice(-1)[0];
-          const peer = userById(
-            c.memberIds.find((id) => id !== currentUserId) ?? "",
-          );
+          const last = visible.filter((m) => m.conversationId === c.id).slice(-1)[0];
+          const peer = userById(c.memberIds.find((id) => id !== currentUserId) ?? "");
           const selected = c.id === activeId;
           return (
             <div
@@ -338,8 +320,7 @@ function ChatPage() {
                   <span
                     className="flex size-11 items-center justify-center rounded-full text-[12px] font-bold text-primary-foreground"
                     style={{
-                      backgroundColor:
-                        c.kind === "group" ? "#0ea5a5" : peer?.color,
+                      backgroundColor: c.kind === "group" ? "#0ea5a5" : peer?.color,
                     }}
                   >
                     {c.kind === "group" ? (
@@ -354,15 +335,11 @@ function ChatPage() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline justify-between gap-2">
-                    <span className="truncate text-[15px] font-medium">
-                      {conversationTitle(c)}
-                    </span>
+                    <span className="truncate text-[15px] font-medium">{conversationTitle(c)}</span>
                     <span
                       className={cn(
                         "shrink-0 text-[11px]",
-                        c.unread > 0
-                          ? "font-semibold text-primary"
-                          : "text-muted-foreground",
+                        c.unread > 0 ? "font-semibold text-primary" : "text-muted-foreground",
                       )}
                     >
                       {last ? formatTime(last.createdAt) : ""}
@@ -373,14 +350,10 @@ function ChatPage() {
                       {last?.revoked
                         ? "تم سحب الرسالة"
                         : (last?.text ??
-                          (last?.attachment
-                            ? `مرفق · ${last.attachment.name}`
-                            : "لا رسائل"))}
+                          (last?.attachment ? `مرفق · ${last.attachment.name}` : "لا رسائل"))}
                     </span>
                     <span className="flex shrink-0 items-center gap-1">
-                      {c.pinned && (
-                        <Pin className="size-3 text-muted-foreground" />
-                      )}
+                      {c.pinned && <Pin className="size-3 text-muted-foreground" />}
                       {c.unread > 0 && (
                         <span className="grid min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
                           {c.unread}
@@ -396,16 +369,10 @@ function ChatPage() {
                 aria-label={c.pinned ? "إلغاء التثبيت" : "تثبيت المحادثة"}
                 className={cn(
                   "me-1 grid size-8 shrink-0 place-items-center rounded-full opacity-0 transition-all group-hover:opacity-100 focus:opacity-100",
-                  c.pinned
-                    ? "text-primary opacity-100"
-                    : "text-muted-foreground/60",
+                  c.pinned ? "text-primary opacity-100" : "text-muted-foreground/60",
                 )}
               >
-                {c.pinned ? (
-                  <PinOff className="size-4" />
-                ) : (
-                  <Pin className="size-4" />
-                )}
+                {c.pinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
               </button>
             </div>
           );
@@ -415,12 +382,7 @@ function ChatPage() {
   );
 
   const threadPane = (
-    <section
-      className={cn(
-        "min-h-0 min-w-0 flex-1 flex-col",
-        active ? "flex" : "hidden md:flex",
-      )}
-    >
+    <section className={cn("min-h-0 min-w-0 flex-1 flex-col", active ? "flex" : "hidden md:flex")}>
       {!active ? (
         <div className="chat-paper flex min-h-0 flex-1 flex-col items-center justify-center gap-3 border-b-4 border-primary/60 px-8 text-center">
           <img
@@ -432,8 +394,8 @@ function ChatPage() {
           />
           <h2 className="font-display text-xl font-semibold">درع للتواصل</h2>
           <p className="max-w-sm text-sm text-muted-foreground">
-            اختر محادثة من القائمة لبدء المراسلة. رسائلك وملفاتك محمية بصلاحيات
-            تحددها أنت لكل رسالة.
+            اختر محادثة من القائمة لبدء المراسلة. رسائلك وملفاتك محمية بصلاحيات تحددها أنت لكل
+            رسالة.
           </p>
         </div>
       ) : (
@@ -450,8 +412,7 @@ function ChatPage() {
             <span
               className="flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-primary-foreground"
               style={{
-                backgroundColor:
-                  active.kind === "group" ? "#0ea5a5" : other?.color,
+                backgroundColor: active.kind === "group" ? "#0ea5a5" : other?.color,
               }}
             >
               {active.kind === "group" ? (
@@ -461,9 +422,7 @@ function ChatPage() {
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-[15px] font-semibold">
-                {conversationTitle(active)}
-              </h1>
+              <h1 className="truncate text-[15px] font-semibold">{conversationTitle(active)}</h1>
               <p className="truncate text-[11px] text-muted-foreground">
                 {active.kind === "group"
                   ? `${active.memberIds.length} أعضاء`
@@ -482,37 +441,33 @@ function ChatPage() {
             className="chat-paper min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 md:px-6"
           >
             <div className="mx-auto w-full max-w-3xl space-y-2">
-            {thread.length === 0 && (
-              <p className="pt-10 text-center text-sm text-muted-foreground">
-                لا توجد رسائل بعد.
-              </p>
-            )}
-            {thread.map((m, i) => (
-              <div key={m.id} className="space-y-1">
-                {(i === 0 ||
-                  new Date(thread[i - 1]!.createdAt).getDate() !==
-                    new Date(m.createdAt).getDate()) && (
-                  <div className="flex justify-center py-2">
-                    <span className="rounded-full bg-surface px-3 py-1 text-[10px] font-medium tracking-wide text-muted-foreground shadow-sm">
-                      {relative(m.createdAt)}
-                    </span>
-                  </div>
-                )}
-                <MessageItem
-                  message={m}
-                  showSender={
-                    active.kind === "group" ||
-                    thread[i - 1]?.senderId !== m.senderId
-                  }
-                  onOpen={openAttachment}
-                  onForward={(msg) => setForwarding(msg)}
-                />
-              </div>
-            ))}
-            <div ref={endRef} />
+              {thread.length === 0 && (
+                <p className="pt-10 text-center text-sm text-muted-foreground">
+                  لا توجد رسائل بعد.
+                </p>
+              )}
+              {thread.map((m, i) => (
+                <div key={m.id} className="space-y-1">
+                  {(i === 0 ||
+                    new Date(thread[i - 1]!.createdAt).getDate() !==
+                      new Date(m.createdAt).getDate()) && (
+                    <div className="flex justify-center py-2">
+                      <span className="rounded-full bg-surface px-3 py-1 text-[10px] font-medium tracking-wide text-muted-foreground shadow-sm">
+                        {relative(m.createdAt)}
+                      </span>
+                    </div>
+                  )}
+                  <MessageItem
+                    message={m}
+                    showSender={active.kind === "group" || thread[i - 1]?.senderId !== m.senderId}
+                    onOpen={openAttachment}
+                    onForward={(msg) => setForwarding(msg)}
+                  />
+                </div>
+              ))}
+              <div ref={endRef} />
             </div>
           </div>
-
 
           <Composer conversationId={active.id} />
         </>
@@ -527,7 +482,7 @@ function ChatPage() {
       padded={false}
       hideTabs={Boolean(active)}
     >
-      <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="flex h-full min-h-0 flex-1 overflow-hidden">
         {listPane}
         {threadPane}
       </div>
@@ -550,22 +505,15 @@ function ChatPage() {
         busy={busy}
       />
 
-      {viewing && (
-        <ProtectedViewer message={viewing} onClose={() => setViewing(null)} />
-      )}
+      {viewing && <ProtectedViewer message={viewing} onClose={() => setViewing(null)} />}
 
-      <Dialog
-        open={Boolean(forwarding)}
-        onOpenChange={(o) => !o && setForwarding(null)}
-      >
+      <Dialog open={Boolean(forwarding)} onOpenChange={(o) => !o && setForwarding(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Forward className="size-4 text-primary" /> إعادة توجيه الرسالة
             </DialogTitle>
-            <DialogDescription>
-              تنتقل الرسالة بنفس صلاحيات الحماية الأصلية.
-            </DialogDescription>
+            <DialogDescription>تنتقل الرسالة بنفس صلاحيات الحماية الأصلية.</DialogDescription>
           </DialogHeader>
           <div className="max-h-72 space-y-1 overflow-y-auto">
             {conversations
@@ -583,9 +531,7 @@ function ChatPage() {
                       <Mail className="size-4" />
                     )}
                   </span>
-                  <span className="truncate text-sm font-medium">
-                    {conversationTitle(c)}
-                  </span>
+                  <span className="truncate text-sm font-medium">{conversationTitle(c)}</span>
                 </button>
               ))}
             {conversations.length <= 1 && (
@@ -599,7 +545,6 @@ function ChatPage() {
     </AppShell>
   );
 }
-
 
 function NewChatDialog({
   open,
@@ -634,12 +579,9 @@ function NewChatDialog({
   people: { id: string; name: string; title: string; email: string; color: string }[];
   busy: boolean;
 }) {
-
   const toggle = (id: string) =>
     setGroupMembers(
-      groupMembers.includes(id)
-        ? groupMembers.filter((m) => m !== id)
-        : [...groupMembers, id],
+      groupMembers.includes(id) ? groupMembers.filter((m) => m !== id) : [...groupMembers, id],
     );
 
   return (
@@ -665,7 +607,6 @@ function NewChatDialog({
             </TabsTrigger>
           </TabsList>
 
-
           <TabsContent value="direct" className="space-y-3 pt-3">
             <Input
               type="email"
@@ -675,88 +616,77 @@ function NewChatDialog({
               placeholder="name@company.com"
               className="h-11 text-start"
             />
-            <Button
-              className="w-full"
-              disabled={busy}
-              onClick={() => void onSubmitEmail()}
-            >
+            <Button className="w-full" disabled={busy} onClick={() => void onSubmitEmail()}>
               بدء المحادثة
             </Button>
           </TabsContent>
 
-            <TabsContent value="group" className="space-y-3 pt-3">
-
-              <Input
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                placeholder="اسم المجموعة"
-                className="h-11"
-              />
-              <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl border border-border p-1">
-                {people.length === 0 && (
-                  <p className="py-6 text-center text-xs text-muted-foreground">
-                    لا يوجد أعضاء مفعّلون بعد.
-                  </p>
-                )}
-                {people.map((u) => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => toggle(u.id)}
-                    className={cn(
-                      "flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-start transition-colors",
-                      groupMembers.includes(u.id) ? "bg-primary/10" : "hover:bg-surface-2",
-                    )}
+          <TabsContent value="group" className="space-y-3 pt-3">
+            <Input
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="اسم المجموعة"
+              className="h-11"
+            />
+            <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl border border-border p-1">
+              {people.length === 0 && (
+                <p className="py-6 text-center text-xs text-muted-foreground">
+                  لا يوجد أعضاء مفعّلون بعد.
+                </p>
+              )}
+              {people.map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={() => toggle(u.id)}
+                  className={cn(
+                    "flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-start transition-colors",
+                    groupMembers.includes(u.id) ? "bg-primary/10" : "hover:bg-surface-2",
+                  )}
+                >
+                  <span
+                    className="flex size-7 items-center justify-center rounded-lg text-[10px] font-bold text-primary-foreground"
+                    style={{ backgroundColor: u.color }}
                   >
-                    <span
-                      className="flex size-7 items-center justify-center rounded-lg text-[10px] font-bold text-primary-foreground"
-                      style={{ backgroundColor: u.color }}
-                    >
-                      {initials(u.name)}
+                    {initials(u.name)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{u.name}</span>
+                    <span className="block truncate text-[10px] text-muted-foreground">
+                      {u.title}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{u.name}</span>
-                      <span className="block truncate text-[10px] text-muted-foreground">
-                        {u.title}
-                      </span>
-                    </span>
-                    {groupMembers.includes(u.id) && (
-                      <span className="text-[10px] font-semibold text-primary">مضاف</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              <Button
-                className="w-full"
-                disabled={busy || !groupName.trim() || groupMembers.length === 0}
-                onClick={() => void onSubmitGroup()}
-              >
-                إنشاء المجموعة
-              </Button>
-            </TabsContent>
+                  </span>
+                  {groupMembers.includes(u.id) && (
+                    <span className="text-[10px] font-semibold text-primary">مضاف</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <Button
+              className="w-full"
+              disabled={busy || !groupName.trim() || groupMembers.length === 0}
+              onClick={() => void onSubmitGroup()}
+            >
+              إنشاء المجموعة
+            </Button>
+          </TabsContent>
 
-
-            <TabsContent value="invite" className="space-y-3 pt-3">
-              <p className="text-xs text-muted-foreground">
-                أنشئ رابط دعوة صالحاً 48 ساعة وأرسله لمن تريد انضمامه.
-              </p>
-              <Input
-                type="email"
-                dir="ltr"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="name@company.com"
-                className="h-11 text-start"
-              />
-              <Button
-                className="w-full"
-                disabled={busy}
-                onClick={() => void onSubmitInvite()}
-              >
-                إنشاء رابط الدعوة ونسخه
-              </Button>
-            </TabsContent>
-
+          <TabsContent value="invite" className="space-y-3 pt-3">
+            <p className="text-xs text-muted-foreground">
+              أنشئ رابط دعوة صالحاً 48 ساعة وأرسله لمن تريد انضمامه.
+            </p>
+            <Input
+              type="email"
+              dir="ltr"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="name@company.com"
+              className="h-11 text-start"
+            />
+            <Button className="w-full" disabled={busy} onClick={() => void onSubmitInvite()}>
+              إنشاء رابط الدعوة ونسخه
+            </Button>
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
