@@ -159,6 +159,7 @@ export function AppShell({
             </div>
           </nav>
         )}
+        </div>
       </div>
     </div>
   );
