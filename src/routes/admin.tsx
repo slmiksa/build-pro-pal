@@ -609,8 +609,8 @@ function AdminPage() {
               حذف {delTarget?.name}
             </DialogTitle>
             <DialogDescription className="text-right">
-              سيُحذف الحساب نهائياً ولن يستطيع الدخول مرة أخرى. تبقى الرسائل
-              المرسلة داخل المحادثات كما هي.
+              سيُحذف الحساب نهائياً مع رسائله والمجموعات التي أنشأها، ولن
+              يستطيع الدخول مرة أخرى. إن أردت إيقافه فقط استخدم «تعطيل».
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-2">
