@@ -6,6 +6,7 @@ import { Watermark } from "@/components/Watermark";
 import { DocumentRender } from "@/components/DocumentRender";
 import { PolicyBadges } from "@/components/PolicyBadges";
 import { useApp } from "@/store/app";
+import { useCaptureWatch } from "@/hooks/use-capture-watch";
 import type { Message } from "@/lib/types";
 
 export function ProtectedViewer({
