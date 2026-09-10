@@ -17,6 +17,8 @@ import type {
   AuditEvent,
   AuditType,
   Conversation,
+  ConvRole,
+
   Invite,
   Message,
   Policy,
