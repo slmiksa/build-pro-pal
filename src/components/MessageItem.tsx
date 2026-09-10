@@ -252,6 +252,12 @@ export function MessageItem({
                     <ImageIcon className="size-4" /> فتح المرفق
                   </DropdownMenuItem>
                 )}
+                {onPin && (
+                  <DropdownMenuItem onSelect={() => onPin(message)}>
+                    <Pin className="size-4" /> {pinned ? "إلغاء التثبيت" : "تثبيت الرسالة"}
+                  </DropdownMenuItem>
+                )}
+
                 {mine && (
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive" onSelect={() => revokeMessage(message.id)}
