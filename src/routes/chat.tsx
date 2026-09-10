@@ -103,6 +103,23 @@ function ChatPage() {
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
   const thread = visible.filter((m) => m.conversationId === activeId);
+  const isGroup = active?.kind === "group";
+  const myRole = active?.myRole ?? "member";
+  const canManage = isGroup && (myRole === "owner" || myRole === "moderator");
+  const isOwner = isGroup && myRole === "owner";
+  const pinnedMsg = active?.pinnedMessageId
+    ? visible.find((m) => m.id === active.pinnedMessageId)
+    : undefined;
+
+  const run = async (fn: () => Promise<string | null>, ok: string) => {
+    setBusy(true);
+    const err = await fn();
+    setBusy(false);
+    if (err) toast.error(err);
+    else toast.success(ok);
+    return !err;
+  };
+
   useEffect(() => {
     if (activeId) markRead(activeId);
   }, [activeId, markRead]);
