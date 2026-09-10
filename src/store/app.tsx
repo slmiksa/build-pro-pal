@@ -808,6 +808,109 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [conversations, refresh],
   );
 
+  const updateGroup = useCallback<Ctx["updateGroup"]>(
+    async (conversationId, patch) => {
+      const update: Record<string, unknown> = {};
+      if (patch.name !== undefined) {
+        const clean = patch.name.trim();
+        if (!clean) return "اكتب اسم المجموعة";
+        update['name'] = clean;
+      }
+      if (patch.locked !== undefined) update['locked'] = patch.locked;
+      if (patch.pinnedMessageId !== undefined)
+        update['pinned_message_id'] = patch.pinnedMessageId;
+
+      if (patch.avatar) {
+        const type = (patch.avatar as File).type || "image/jpeg";
+        const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
+        const path = `group/${conversationId}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .upload(path, patch.avatar, { contentType: type, upsert: true });
+        if (upErr) return "تعذّر رفع صورة المجموعة";
+        update['avatar_path'] = path;
+      }
+
+      if (Object.keys(update).length === 0) return null;
+      const { error } = await supabase
+        .from("conversations")
+        .update(update as never)
+        .eq("id", conversationId);
+      if (error) return "هذه العملية لمالك المجموعة أو المشرفين فقط";
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
+  const setConversationRole = useCallback<Ctx["setConversationRole"]>(
+    async (conversationId, userId, role) => {
+      const { error } = await supabase.rpc("set_conversation_member_role", {
+        _conversation_id: conversationId,
+        _user_id: userId,
+        _role: role,
+      });
+      if (error) {
+        if (error.message.includes("forbidden")) return "هذه العملية لمالك المجموعة فقط";
+        if (error.message.includes("cannot_change_owner"))
+          return "لا يمكن تغيير دور مالك المجموعة";
+        return "تعذّر تغيير الصلاحية";
+      }
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
+  const removeConversationMember = useCallback<Ctx["removeConversationMember"]>(
+    async (conversationId, userId) => {
+      const { error } = await supabase.rpc("remove_conversation_member", {
+        _conversation_id: conversationId,
+        _user_id: userId,
+      });
+      if (error) {
+        if (error.message.includes("cannot_remove_owner"))
+          return "لا يمكن إخراج مالك المجموعة";
+        if (error.message.includes("owner_cannot_leave"))
+          return "أنت مالك المجموعة، احذفها أو انقل الملكية";
+        if (error.message.includes("forbidden")) return "هذه العملية للمالك أو المشرفين";
+        return "تعذّرت العملية";
+      }
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
+  const leaveConversation = useCallback<Ctx["leaveConversation"]>(
+    async (conversationId) => {
+      const me = currentUserRef.current;
+      if (!me) return "الجلسة منتهية";
+      return removeConversationMember(conversationId, me);
+    },
+    [removeConversationMember],
+  );
+
+  const deleteConversation = useCallback<Ctx["deleteConversation"]>(
+    async (conversationId) => {
+      const { error } = await supabase.rpc("delete_conversation", {
+        _conversation_id: conversationId,
+      });
+      if (error) {
+        if (error.message.includes("forbidden"))
+          return "الحذف النهائي لمالك المجموعة فقط";
+        return "تعذّر حذف المحادثة";
+      }
+      setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+      setMessages((prev) => prev.filter((m) => m.conversationId !== conversationId));
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
+
+
   const forwardMessage = useCallback<Ctx["forwardMessage"]>(
     async (messageId, targetConversationId) => {
       const { error } = await supabase.rpc("forward_message", {
