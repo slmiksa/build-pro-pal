@@ -479,8 +479,9 @@ function ChatPage() {
 
           <div
             ref={scrollRef}
-            className="chat-paper min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-3 md:px-6"
+            className="chat-paper min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 md:px-6"
           >
+            <div className="mx-auto w-full max-w-3xl space-y-2">
             {thread.length === 0 && (
               <p className="pt-10 text-center text-sm text-muted-foreground">
                 لا توجد رسائل بعد.
@@ -509,7 +510,9 @@ function ChatPage() {
               </div>
             ))}
             <div ref={endRef} />
+            </div>
           </div>
+
 
           <Composer conversationId={active.id} />
         </>
