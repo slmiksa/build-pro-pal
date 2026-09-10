@@ -384,7 +384,7 @@ function ChatPage() {
                   <UserAvatar
                     name={peer?.name ?? "؟"}
                     color={c.kind === "group" ? "#0ea5a5" : peer?.color}
-                    avatarUrl={c.kind === "group" ? undefined : peer?.avatarUrl}
+                    avatarUrl={c.kind === "group" ? c.avatarUrl : peer?.avatarUrl}
                     className="size-11 text-[12px]"
                     fallback={
                       c.kind === "group" ? <Users2 className="size-5" /> : undefined
