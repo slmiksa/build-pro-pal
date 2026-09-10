@@ -459,6 +459,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const body = row["attachment"] ? "أرسل لك ملفاً" : "لديك رسالة جديدة";
       showMessageNotification({ title, body, tag: convId });
     };
+    // Screenshot alerts: the owner of the captured file (and admins) get a
+    // live warning with who captured it, which file and where.
+    const onAudit = (payload: { eventType: string; new: Record<string, unknown> }) => {
+      bump();
+      if (payload.eventType !== "INSERT") return;
+      const row = payload.new;
+      if (row["type"] !== "screenshot_attempt") return;
+      const actorId = row["actor_id"] as string | undefined;
+      if (!actorId || actorId === currentUserId) return;
+      const messageId = row["message_id"] as string | undefined;
+      const msg = messageId
+        ? messagesRef.current.find((m) => m.id === messageId)
+        : undefined;
+      const mine = msg?.senderId === currentUserId;
+      if (!mine && !isAdminRef.current) return;
+      const actor = usersRef.current.find((u) => u.id === actorId);
+      const title = `تنبيه: التقاط شاشة بواسطة ${actor?.name ?? "عضو"}`;
+      const body = String(row["detail"] ?? "محاولة التقاط شاشة");
+      toast.warning(title, { description: body });
+      showMessageNotification({ title, body, tag: "dir3-capture" });
+    };
+
     const channel = supabase
       .channel("dir3-live")
       .on(
