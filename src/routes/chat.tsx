@@ -252,6 +252,23 @@ function ChatPage() {
 
   const other = active ? userById(active.memberIds.find((id) => id !== currentUserId) ?? "") : null;
 
+  // Screenshot / recording detection inside a conversation (files opened in the
+  // protected viewer are watched there with the file name attached).
+  useCaptureWatch({
+    enabled: Boolean(active) && !viewing,
+    onAttempt: (reason) => {
+      if (!active) return;
+      toast.error("سُجلت محاولة التقاط شاشة", {
+        description: "تم إبلاغ أعضاء المحادثة المعنيين باسمك ووقت المحاولة.",
+      });
+      void log("screenshot_attempt", `${reason} داخل «${conversationTitle(active)}»`, {
+        conversationId: active.id,
+      });
+    },
+  });
+
+
+
   const listPane = (
     <aside
       className={cn(
