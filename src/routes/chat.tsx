@@ -107,26 +107,41 @@ function ChatPage() {
     endRef.current?.scrollIntoView({ block: "end" });
   };
 
+  const lastMsg = thread[thread.length - 1];
+  const lastMsgId = lastMsg?.id ?? null;
+  const lastMine = lastMsg?.senderId === currentUserId;
+
   useEffect(() => {
-    if (prevConvRef.current !== activeId) {
-      prevConvRef.current = activeId;
-      // Content (images/attachments) can grow after mount, so pin to the bottom
-      // a few times right after opening a conversation.
-      jumpToEnd();
-      const r = requestAnimationFrame(jumpToEnd);
-      const t1 = window.setTimeout(jumpToEnd, 60);
-      const t2 = window.setTimeout(jumpToEnd, 250);
-      const t3 = window.setTimeout(jumpToEnd, 600);
-      return () => {
-        cancelAnimationFrame(r);
-        window.clearTimeout(t1);
-        window.clearTimeout(t2);
-        window.clearTimeout(t3);
-      };
-    }
-    if (nearBottom()) jumpToEnd();
-    return undefined;
-  }, [thread.length, activeId]);
+    const convChanged = prevConvRef.current !== activeId;
+    prevConvRef.current = activeId;
+    // Jump when opening a conversation, when I just sent, or when already at
+    // the bottom. Content (images/attachments) can grow after mount, so retry.
+    if (!convChanged && !lastMine && !nearBottom()) return undefined;
+    jumpToEnd();
+    const r = requestAnimationFrame(jumpToEnd);
+    const t1 = window.setTimeout(jumpToEnd, 60);
+    const t2 = window.setTimeout(jumpToEnd, 250);
+    const t3 = window.setTimeout(jumpToEnd, 600);
+    return () => {
+      cancelAnimationFrame(r);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+    };
+  }, [lastMsgId, activeId, lastMine, thread.length]);
+
+  // Content that grows after render (images, documents) must not leave the
+  // newest message off-screen while the user is reading at the bottom.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(() => {
+      if (nearBottom()) jumpToEnd();
+    });
+    Array.from(el.children).forEach((c) => ro.observe(c));
+    return () => ro.disconnect();
+  }, [activeId]);
+
 
   // Keep the newest message visible when the on-screen keyboard opens/closes.
   useEffect(() => {
