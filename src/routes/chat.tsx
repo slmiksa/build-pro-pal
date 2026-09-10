@@ -69,6 +69,12 @@ function ChatPage() {
     createGroup,
     createInvite,
     forwardMessage,
+    updateGroup,
+    updateGroupMembers,
+    setConversationRole,
+    removeConversationMember,
+    leaveConversation,
+    deleteConversation,
     log,
   } = useApp();
 
@@ -83,6 +89,12 @@ function ChatPage() {
   const [busy, setBusy] = useState(false);
   const [forwarding, setForwarding] = useState<Message | null>(null);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const groupAvatarRef = useRef<HTMLInputElement>(null);
+
 
   const endRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
