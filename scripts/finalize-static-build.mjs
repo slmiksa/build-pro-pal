@@ -51,6 +51,9 @@ await rm(path.join(dist, ".lovable"), { recursive: true, force: true });
 if (!(await exists(path.join(dist, "index.html")))) {
   throw new Error("فشل تجهيز dist/index.html.");
 }
+// نسخة احتياطية للمسارات المباشرة على الاستضافات التي تدعم 404.html
+await cp(path.join(dist, "index.html"), path.join(dist, "404.html"), { force: true });
+
 if (await exists(path.join(dist, "server"))) {
   throw new Error("فشل حذف dist/server.");
 }

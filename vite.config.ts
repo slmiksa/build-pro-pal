@@ -13,6 +13,13 @@ export default defineConfig({
     server: { entry: "server" },
     // توليد index.html ثابت داخل dist/client ليعمل على استضافة Apache (public_html)
     prerender: { enabled: true, crawlLinks: false },
-    pages: [{ path: "/" }],
+    pages: [
+      { path: "/" },
+      { path: "/chat" },
+      { path: "/admin" },
+      { path: "/audit" },
+      { path: "/reset-password" },
+    ],
+
   },
 });

@@ -71,72 +71,76 @@ function LoginPage() {
   };
 
   return (
-    <main className="min-h-dvh w-full overflow-y-auto bg-background">
-      <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col lg:flex-row">
-        {/* Brand panel */}
-        <section className="flex flex-col justify-center gap-8 bg-surface-2 px-5 py-10 sm:px-10 lg:w-[55%] lg:px-14 lg:py-16">
+    <main className="relative min-h-dvh w-full overflow-y-auto bg-[#07110d]">
+      {/* خلفية حديثة */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute -top-40 -start-32 size-[32rem] rounded-full bg-primary/25 blur-[120px]" />
+        <div className="absolute bottom-[-12rem] end-[-8rem] size-[34rem] rounded-full bg-emerald-400/15 blur-[130px]" />
+      </div>
+
+      <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col items-center justify-center gap-10 px-5 py-10 sm:px-8 lg:flex-row lg:items-center lg:gap-16 lg:py-16">
+        {/* الهوية */}
+        <section className="w-full max-w-xl text-white lg:flex-1">
           <div className="flex items-center gap-4">
-            <div className="grid size-16 shrink-0 place-items-center rounded-2xl bg-accent sm:size-20">
+            <div className="grid size-16 shrink-0 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/15 backdrop-blur sm:size-20">
               <img
                 src="/logo.png"
                 alt="شعار درع"
-                width={72}
-                height={72}
-                className="size-12 object-contain sm:size-14"
+                width={80}
+                height={80}
+                className="size-11 object-contain sm:size-14"
               />
             </div>
             <div className="min-w-0">
-              <p className="font-display text-2xl font-bold leading-tight sm:text-3xl">
-                {COMPANY_NAME}
-              </p>
-              <p className="truncate text-sm text-muted-foreground">
-                درع الحماية والأمان لتواصل بلا تسريب
-              </p>
+              <p className="font-display text-2xl font-bold sm:text-3xl">{COMPANY_NAME}</p>
+              <p className="text-sm text-white/60">درع الحماية والأمان لتواصل بلا تسريب</p>
             </div>
           </div>
 
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-primary sm:text-sm">
-              <ShieldCheck className="size-4" />
-              مساحة عمل خاصة وآمنة
-            </div>
-            <h1 className="font-display text-[1.75rem] font-bold leading-[1.4] sm:text-4xl lg:text-[2.75rem]">
-              تواصل شركتك، محفوظ داخل درع واحد
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8">
-              محادثات وملفات وصلاحيات دقيقة ضمن منصة ويب متكاملة تعمل على الكمبيوتر والجوال.
-            </p>
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-300 ring-1 ring-white/10 sm:text-sm">
+            <ShieldCheck className="size-4" />
+            مساحة عمل خاصة وآمنة
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <h1 className="mt-5 font-display text-[1.9rem] font-bold leading-[1.35] text-white sm:text-[2.6rem] lg:text-[3rem]">
+            تواصل شركتك،
+            <span className="block bg-gradient-to-l from-emerald-300 to-primary bg-clip-text text-transparent">
+              محفوظ داخل درع واحد
+            </span>
+          </h1>
+          <p className="mt-4 max-w-lg text-sm leading-7 text-white/65 sm:text-base sm:leading-8">
+            محادثات وملفات وصلاحيات دقيقة ضمن منصة ويب متكاملة تعمل على الكمبيوتر والجوال.
+          </p>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
             {highlights.map((h) => (
               <div
                 key={h.label}
-                className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4"
+                className="rounded-2xl bg-white/[0.06] p-4 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-white/[0.1]"
               >
-                <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent text-primary">
+                <div className="grid size-9 place-items-center rounded-xl bg-primary/20 text-emerald-300">
                   <h.icon className="size-4" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-accent-foreground">{h.label}</p>
-                  <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{h.desc}</p>
-                </div>
+                <p className="mt-3 text-sm font-semibold text-white">{h.label}</p>
+                <p className="mt-1 text-xs leading-5 text-white/55">{h.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Sign-in panel */}
-        <section className="flex flex-1 items-center justify-center px-5 py-10 sm:px-10 lg:px-14">
-          <div className="w-full max-w-sm">
-            <h2 className="font-display text-2xl font-bold sm:text-3xl">تسجيل الدخول</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        {/* بطاقة الدخول */}
+        <section className="w-full max-w-md lg:w-[26rem]">
+          <div className="rounded-3xl bg-white/[0.07] p-6 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)] ring-1 ring-white/12 backdrop-blur-xl sm:p-8">
+            <h2 className="font-display text-2xl font-bold text-white sm:text-[1.75rem]">
+              تسجيل الدخول
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-white/60">
               استخدم حساب العمل للوصول إلى المحادثات والملفات.
             </p>
 
             <form onSubmit={submit} className="mt-7 space-y-5">
               <div className="space-y-2 text-start">
-                <Label htmlFor="email">البريد الرسمي</Label>
+                <Label htmlFor="email" className="text-white/75">البريد الرسمي</Label>
                 <Input
                   id="email"
                   type="email"
@@ -145,12 +149,12 @@ function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={`name@${COMPANY_DOMAIN}`}
-                  className="h-12 rounded-xl border-border bg-surface text-base shadow-none"
+                  className="h-12 rounded-xl border-white/15 bg-white/10 text-base text-white shadow-none placeholder:text-white/35 focus-visible:border-primary"
                 />
               </div>
 
               <div className="space-y-2 text-start">
-                <Label htmlFor="password">كلمة المرور</Label>
+                <Label htmlFor="password" className="text-white/75">كلمة المرور</Label>
                 <Input
                   id="password"
                   type="password"
@@ -158,19 +162,19 @@ function LoginPage() {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl border-border bg-surface text-base shadow-none"
+                  className="h-12 rounded-xl border-white/15 bg-white/10 text-base text-white shadow-none focus-visible:border-primary"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={busy}
-                className="h-12 w-full rounded-xl text-base font-bold"
+                className="h-12 w-full rounded-xl text-base font-bold shadow-[0_16px_40px_-18px_var(--primary)]"
               >
                 {busy ? "جارٍ الدخول…" : "دخول آمن"}
               </Button>
 
-              <p className="text-center text-xs leading-6 text-muted-foreground">
+              <p className="text-center text-xs leading-6 text-white/50">
                 الحسابات يُنشئها مسؤول الشركة فقط. نسيت كلمة المرور؟ تواصل مع المسؤول ليضبطها لك مباشرة.
               </p>
             </form>
@@ -180,4 +184,5 @@ function LoginPage() {
     </main>
   );
 }
+
 
