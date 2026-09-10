@@ -82,15 +82,46 @@ const toneBg = (tone: "danger" | "warn" | "info") =>
       : "bg-primary/12 text-primary";
 
 function AuditPage() {
-  const { audit, messages, currentUserId, userById } = useApp();
-  const [tab, setTab] = useState<"mine" | "files">("files");
+  const {
+    audit,
+    messages,
+    currentUserId,
+    userById,
+    isAdmin,
+    users,
+    conversations,
+    conversationTitle,
+  } = useApp();
+  const [tab, setTab] = useState<"mine" | "files" | "all">("files");
   const [filter, setFilter] = useState<"all" | AuditType>("all");
+  const [member, setMember] = useState<"all" | string>("all");
 
   /* Events caused by me */
   const myActivity = useMemo(
     () => audit.filter((e) => e.actorId === currentUserId),
     [audit, currentUserId],
   );
+
+  /* Admin view: every event, optionally scoped to one member */
+  const allRows = useMemo(() => {
+    let list = audit;
+    if (member !== "all") list = list.filter((e) => e.actorId === member);
+    if (filter !== "all") list = list.filter((e) => e.type === filter);
+    return list;
+  }, [audit, member, filter]);
+
+  const describe = (e: AuditEvent) => {
+    const msg = e.messageId ? messages.find((m) => m.id === e.messageId) : undefined;
+    const conv = (e.conversationId ?? msg?.conversationId)
+      ? conversations.find((c) => c.id === (e.conversationId ?? msg?.conversationId))
+      : undefined;
+    return {
+      file: msg?.attachment?.name ?? "",
+      where: conv ? conversationTitle(conv) : "",
+      owner: msg ? (userById(msg.senderId)?.name ?? "") : "",
+    };
+  };
+
 
   /* My own files (messages with attachments that I sent) + every event on them */
   const myFiles = useMemo(() => {
