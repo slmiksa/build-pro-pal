@@ -69,6 +69,12 @@ function ChatPage() {
     createGroup,
     createInvite,
     forwardMessage,
+    updateGroup,
+    updateGroupMembers,
+    setConversationRole,
+    removeConversationMember,
+    leaveConversation,
+    deleteConversation,
     log,
   } = useApp();
 
@@ -83,6 +89,12 @@ function ChatPage() {
   const [busy, setBusy] = useState(false);
   const [forwarding, setForwarding] = useState<Message | null>(null);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const groupAvatarRef = useRef<HTMLInputElement>(null);
+
 
   const endRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -91,6 +103,23 @@ function ChatPage() {
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
   const thread = visible.filter((m) => m.conversationId === activeId);
+  const isGroup = active?.kind === "group";
+  const myRole = active?.myRole ?? "member";
+  const canManage = isGroup && (myRole === "owner" || myRole === "moderator");
+  const isOwner = isGroup && myRole === "owner";
+  const pinnedMsg = active?.pinnedMessageId
+    ? visible.find((m) => m.id === active.pinnedMessageId)
+    : undefined;
+
+  const run = async (fn: () => Promise<string | null>, ok: string) => {
+    setBusy(true);
+    const err = await fn();
+    setBusy(false);
+    if (err) toast.error(err);
+    else toast.success(ok);
+    return !err;
+  };
+
   useEffect(() => {
     if (activeId) markRead(activeId);
   }, [activeId, markRead]);
@@ -355,7 +384,7 @@ function ChatPage() {
                   <UserAvatar
                     name={peer?.name ?? "؟"}
                     color={c.kind === "group" ? "#0ea5a5" : peer?.color}
-                    avatarUrl={c.kind === "group" ? undefined : peer?.avatarUrl}
+                    avatarUrl={c.kind === "group" ? c.avatarUrl : peer?.avatarUrl}
                     className="size-11 text-[12px]"
                     fallback={
                       c.kind === "group" ? <Users2 className="size-5" /> : undefined
@@ -448,9 +477,9 @@ function ChatPage() {
               aria-label="عرض أعضاء المحادثة"
             >
               <UserAvatar
-                name={other?.name ?? "؟"}
+                name={active.kind === "group" ? conversationTitle(active) : (other?.name ?? "؟")}
                 color={active.kind === "group" ? "#0ea5a5" : other?.color}
-                avatarUrl={active.kind === "group" ? undefined : other?.avatarUrl}
+                avatarUrl={active.kind === "group" ? active.avatarUrl : other?.avatarUrl}
                 className="size-10 text-xs"
                 fallback={
                   active.kind === "group" ? <Users2 className="size-5" /> : undefined
@@ -462,17 +491,62 @@ function ChatPage() {
                 </span>
                 <span className="block truncate text-[11px] text-muted-foreground">
                   {active.kind === "group"
-                    ? `${active.memberIds.length} أعضاء · اضغط لعرضهم`
+                    ? `${active.memberIds.length} أعضاء${active.locked ? " · الإرسال مقفل" : ""} · اضغط لعرضهم`
                     : other?.online
                       ? "متصل الآن"
                       : (other?.title ?? "")}
                 </span>
               </span>
             </button>
+            {isGroup && canManage && (
+              <button
+                type="button"
+                onClick={() => {
+                  setNameDraft(active.name ?? "");
+                  setSettingsOpen(true);
+                }}
+                aria-label="إعدادات المجموعة"
+                className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-surface-2"
+              >
+                <Settings2 className="size-[18px]" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(active.id)}
+              aria-label="حذف المحادثة"
+              className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-surface-2 hover:text-destructive"
+            >
+              <Trash2 className="size-[18px]" />
+            </button>
             <span className="grid size-9 shrink-0 place-items-center rounded-full text-primary">
               <ShieldCheck className="size-[18px]" />
             </span>
           </header>
+
+          {pinnedMsg && (
+            <div className="flex shrink-0 items-center gap-2 border-b border-border bg-surface-2/70 px-4 py-2 text-[12px]">
+              <Pin className="size-3.5 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1 truncate">
+                {pinnedMsg.text ?? pinnedMsg.attachment?.name ?? "رسالة مثبتة"}
+              </span>
+              {canManage && (
+                <button
+                  type="button"
+                  className="shrink-0 text-[11px] font-semibold text-muted-foreground hover:text-destructive"
+                  onClick={() =>
+                    void run(
+                      () => updateGroup(active.id, { pinnedMessageId: null }),
+                      "أُلغي التثبيت",
+                    )
+                  }
+                >
+                  إلغاء
+                </button>
+              )}
+            </div>
+          )}
+
 
           <div
             ref={scrollRef}
@@ -500,7 +574,22 @@ function ChatPage() {
                     showSender={active.kind === "group" || thread[i - 1]?.senderId !== m.senderId}
                     onOpen={openAttachment}
                     onForward={(msg) => setForwarding(msg)}
+                    pinned={active.pinnedMessageId === m.id}
+                    onPin={
+                      canManage
+                        ? (msg) =>
+                            void run(
+                              () =>
+                                updateGroup(active.id, {
+                                  pinnedMessageId:
+                                    active.pinnedMessageId === msg.id ? null : msg.id,
+                                }),
+                              active.pinnedMessageId === msg.id ? "أُلغي التثبيت" : "تم التثبيت",
+                            )
+                        : undefined
+                    }
                   />
+
                 </div>
               ))}
               <div ref={endRef} />
@@ -559,6 +648,7 @@ function ChatPage() {
             {(active?.memberIds ?? []).map((id) => {
               const u = userById(id);
               const isMe = id === currentUserId;
+              const role = active?.roles[id] ?? "member";
               return (
                 <div
                   key={id}
@@ -571,32 +661,277 @@ function ChatPage() {
                     className="size-9 text-[11px]"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">
+                    <span className="flex items-center gap-1.5 truncate text-sm font-medium">
                       {u?.name ?? "عضو"} {isMe && "(أنت)"}
+                      {isGroup && role !== "member" && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                          {role === "owner" ? "مالك" : "مشرف"}
+                        </span>
+                      )}
                     </span>
                     <span className="block truncate text-[11px] text-muted-foreground">
                       {u?.title ?? ""}
                     </span>
                   </span>
-                  {!isMe && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 shrink-0 rounded-full px-3 text-[12px]"
-                      onClick={() => {
-                        setMembersOpen(false);
-                        void beginChat(id);
-                      }}
-                    >
-                      مراسلة
-                    </Button>
-                  )}
+                  <span className="flex shrink-0 items-center gap-1">
+                    {!isMe && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 shrink-0 rounded-full px-3 text-[12px]"
+                        onClick={() => {
+                          setMembersOpen(false);
+                          void beginChat(id);
+                        }}
+                      >
+                        مراسلة
+                      </Button>
+                    )}
+                    {isGroup && isOwner && !isMe && role !== "owner" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        className="h-7 shrink-0 rounded-full px-2 text-[12px]"
+                        onClick={() =>
+                          void run(
+                            () =>
+                              setConversationRole(
+                                active!.id,
+                                id,
+                                role === "moderator" ? "member" : "moderator",
+                              ),
+                            "تم تحديث الصلاحية",
+                          )
+                        }
+                      >
+                        {role === "moderator" ? "سحب الإشراف" : "منح إشراف"}
+                      </Button>
+                    )}
+                    {isGroup && canManage && !isMe && role !== "owner" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        className="h-7 shrink-0 rounded-full px-2 text-[12px] text-destructive"
+                        onClick={() =>
+                          void run(
+                            () => removeConversationMember(active!.id, id),
+                            "تم إخراج العضو",
+                          )
+                        }
+                      >
+                        إخراج
+                      </Button>
+                    )}
+                  </span>
                 </div>
               );
             })}
           </div>
+          {isGroup && (
+            <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+              {canManage && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => {
+                    setMembersOpen(false);
+                    setAddOpen(true);
+                  }}
+                >
+                  <Plus className="size-4" /> إضافة عضو
+                </Button>
+              )}
+              {!isOwner && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  className="rounded-full text-destructive"
+                  onClick={async () => {
+                    const ok = await run(
+                      () => leaveConversation(active!.id),
+                      "غادرت المجموعة",
+                    );
+                    if (ok) {
+                      setMembersOpen(false);
+                      setActiveId(null);
+                    }
+                  }}
+                >
+                  مغادرة المجموعة
+                </Button>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
+
+      {/* Group settings: picture, name, and send lock. */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings2 className="size-4 text-primary" /> إعدادات المجموعة
+            </DialogTitle>
+            <DialogDescription>
+              الصورة والاسم وصلاحية الإرسال داخل المجموعة.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <UserAvatar
+                name={active ? conversationTitle(active) : "مجموعة"}
+                color="#0ea5a5"
+                avatarUrl={active?.avatarUrl}
+                className="size-14 text-sm"
+                fallback={<Users2 className="size-6" />}
+              />
+              <input
+                ref={groupAvatarRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file || !active) return;
+                  await run(() => updateGroup(active.id, { avatar: file }), "تم تحديث الصورة");
+                }}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full"
+                disabled={busy}
+                onClick={() => groupAvatarRef.current?.click()}
+              >
+                تغيير الصورة
+              </Button>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[12px] font-medium text-muted-foreground">
+                اسم المجموعة
+              </label>
+              <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
+              <Button
+                size="sm"
+                className="rounded-full"
+                disabled={busy}
+                onClick={() =>
+                  void run(() => updateGroup(active!.id, { name: nameDraft }), "تم حفظ الاسم")
+                }
+              >
+                حفظ
+              </Button>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2">
+              <span className="text-[12px]">
+                منع الإرسال على الأعضاء (المالك والمشرفون فقط)
+              </span>
+              <Button
+                size="sm"
+                variant={active?.locked ? "default" : "outline"}
+                className="rounded-full"
+                disabled={busy}
+                onClick={() =>
+                  void run(
+                    () => updateGroup(active!.id, { locked: !active!.locked }),
+                    active?.locked ? "تم فتح الإرسال" : "تم قفل الإرسال",
+                  )
+                }
+              >
+                {active?.locked ? "مقفل" : "مفتوح"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add members to an existing group. */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="size-4 text-primary" /> إضافة أعضاء
+            </DialogTitle>
+            <DialogDescription>اختر من الأعضاء المتاحين لك.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-72 space-y-1 overflow-y-auto">
+            {users
+              .filter(
+                (u) =>
+                  !u.disabled &&
+                  u.id !== currentUserId &&
+                  !(active?.memberIds ?? []).includes(u.id),
+              )
+              .map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void run(
+                      () => updateGroupMembers(active!.id, [...active!.memberIds, u.id]),
+                      "تمت الإضافة",
+                    )
+                  }
+                  className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-start hover:bg-surface-2"
+                >
+                  <UserAvatar
+                    name={u.name}
+                    color={u.color}
+                    avatarUrl={u.avatarUrl}
+                    className="size-9 text-[11px]"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{u.name}</span>
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                      {u.title}
+                    </span>
+                  </span>
+                </button>
+              ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Permanent deletion of a chat or group. */}
+      <Dialog open={Boolean(confirmDelete)} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="size-4 text-destructive" /> حذف المحادثة
+            </DialogTitle>
+            <DialogDescription>
+              سيتم حذف المحادثة ورسائلها ومرفقاتها نهائيًا لجميع الأعضاء، ولا يمكن التراجع.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" className="rounded-full" onClick={() => setConfirmDelete(null)}>
+              إلغاء
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-full"
+              disabled={busy}
+              onClick={async () => {
+                const id = confirmDelete;
+                if (!id) return;
+                const ok = await run(() => deleteConversation(id), "تم حذف المحادثة");
+                setConfirmDelete(null);
+                if (ok) setActiveId(null);
+              }}
+            >
+              حذف نهائي
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
 
 
 

@@ -270,8 +270,20 @@ export function Composer({ conversationId }: { conversationId: string }) {
 
   const activeCount = policyItems(policy).filter((i) => i.danger).length;
 
+  const muted =
+    Boolean(conversation?.locked) && (conversation?.myRole ?? "member") === "member";
+
+  if (muted) {
+    return (
+      <div className="pb-safe relative z-10 shrink-0 border-t border-border bg-background px-4 py-3 text-center text-xs font-medium text-muted-foreground">
+        الإرسال في هذه المجموعة مقصور على المالك والمشرفين
+      </div>
+    );
+  }
+
   return (
     <div className="pb-safe relative z-10 shrink-0 border-t border-border bg-background px-2.5 pt-2 sm:px-4 md:px-5">
+
       {mentionMatches.length > 0 && (
         <div className="mb-2 max-h-52 overflow-y-auto rounded-2xl border border-border bg-background p-1 shadow-lg">
           <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground">

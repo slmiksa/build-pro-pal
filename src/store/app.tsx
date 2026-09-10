@@ -17,6 +17,8 @@ import type {
   AuditEvent,
   AuditType,
   Conversation,
+  ConvRole,
+
   Invite,
   Message,
   Policy,
@@ -85,10 +87,31 @@ type Ctx = {
     conversationId: string,
     memberIds: UserId[],
   ) => Promise<string | null>;
+  updateGroup: (
+    conversationId: string,
+    patch: {
+      name?: string | undefined;
+      locked?: boolean | undefined;
+      pinnedMessageId?: string | null | undefined;
+      avatar?: File | Blob | undefined;
+    },
+  ) => Promise<string | null>;
+  setConversationRole: (
+    conversationId: string,
+    userId: UserId,
+    role: "moderator" | "member",
+  ) => Promise<string | null>;
+  removeConversationMember: (
+    conversationId: string,
+    userId: UserId,
+  ) => Promise<string | null>;
+  leaveConversation: (conversationId: string) => Promise<string | null>;
+  deleteConversation: (conversationId: string) => Promise<string | null>;
   forwardMessage: (
     messageId: string,
     targetConversationId: string,
   ) => Promise<string | null>;
+
   sendMessage: (input: {
     conversationId: string;
     text?: string | undefined;
@@ -297,17 +320,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUsers(loadedUsers);
 
       const membersByConv = new Map<string, string[]>();
+      const rolesByConv = new Map<string, Record<string, ConvRole>>();
       const lastReadFor = new Map<string, number>();
       const pinnedFor = new Set<string>();
       for (const m of memberRes.data ?? []) {
         const list = membersByConv.get(m.conversation_id) ?? [];
         list.push(m.user_id);
         membersByConv.set(m.conversation_id, list);
+        const roles = rolesByConv.get(m.conversation_id) ?? {};
+        roles[m.user_id] = ((m as { role?: ConvRole }).role ?? "member") as ConvRole;
+        rolesByConv.set(m.conversation_id, roles);
         if (m.user_id === me) {
           lastReadFor.set(m.conversation_id, ms(m.last_read_at));
           if ((m as { pinned?: boolean }).pinned) pinnedFor.add(m.conversation_id);
         }
       }
+
 
       const readsByMessage = new Map<string, string[]>();
       for (const r of readsRes.data ?? []) {
@@ -374,7 +402,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       setMessages(mapped);
 
-      const allConversations = (convRes.data ?? []).map((c) => {
+      const convRows = (convRes.data ?? []) as Array<
+        Record<string, unknown> & { id: string; kind: "direct" | "group" }
+      >;
+      const groupAvatarPaths = convRows
+        .map((c) => (typeof c['avatar_path'] === "string" ? (c['avatar_path'] as string) : ""))
+        .filter(Boolean);
+      const groupAvatarUrls = new Map<string, string>();
+      if (groupAvatarPaths.length) {
+        const { data: signedGroups } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .createSignedUrls(groupAvatarPaths, 3600);
+        for (const s of signedGroups ?? []) {
+          if (s.path && s.signedUrl) groupAvatarUrls.set(s.path, s.signedUrl);
+        }
+      }
+
+      const allConversations = convRows.map((c) => {
         const lastRead = lastReadFor.get(c.id) ?? 0;
         const unread = mapped.filter(
           (m) =>
@@ -382,15 +426,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
             m.senderId !== me &&
             m.createdAt > lastRead,
         ).length;
+        const roles = rolesByConv.get(c.id) ?? {};
+        const avatarPath =
+          typeof c['avatar_path'] === "string" && c['avatar_path']
+            ? (c['avatar_path'] as string)
+            : undefined;
         return {
           id: c.id,
           kind: c.kind,
-          name: c.name ?? undefined,
+          name: (c['name'] as string | null) ?? undefined,
           memberIds: membersByConv.get(c.id) ?? [],
           unread,
           pinned: pinnedFor.has(c.id),
+          createdBy: c['created_by'] as string,
+          avatarPath,
+          avatarUrl: avatarPath ? groupAvatarUrls.get(avatarPath) : undefined,
+          locked: Boolean(c['locked']),
+          pinnedMessageId: (c['pinned_message_id'] as string | null) ?? undefined,
+          roles,
+          myRole: (roles[me] ?? "member") as ConvRole,
         };
       });
+
 
       // Collapse duplicate one-to-one chats with the same person into the
       // conversation that actually holds the history.
@@ -750,6 +807,109 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     [conversations, refresh],
   );
+
+  const updateGroup = useCallback<Ctx["updateGroup"]>(
+    async (conversationId, patch) => {
+      const update: Record<string, unknown> = {};
+      if (patch.name !== undefined) {
+        const clean = patch.name.trim();
+        if (!clean) return "اكتب اسم المجموعة";
+        update['name'] = clean;
+      }
+      if (patch.locked !== undefined) update['locked'] = patch.locked;
+      if (patch.pinnedMessageId !== undefined)
+        update['pinned_message_id'] = patch.pinnedMessageId;
+
+      if (patch.avatar) {
+        const type = (patch.avatar as File).type || "image/jpeg";
+        const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
+        const path = `group/${conversationId}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .upload(path, patch.avatar, { contentType: type, upsert: true });
+        if (upErr) return "تعذّر رفع صورة المجموعة";
+        update['avatar_path'] = path;
+      }
+
+      if (Object.keys(update).length === 0) return null;
+      const { error } = await supabase
+        .from("conversations")
+        .update(update as never)
+        .eq("id", conversationId);
+      if (error) return "هذه العملية لمالك المجموعة أو المشرفين فقط";
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
+  const setConversationRole = useCallback<Ctx["setConversationRole"]>(
+    async (conversationId, userId, role) => {
+      const { error } = await supabase.rpc("set_conversation_member_role", {
+        _conversation_id: conversationId,
+        _user_id: userId,
+        _role: role,
+      });
+      if (error) {
+        if (error.message.includes("forbidden")) return "هذه العملية لمالك المجموعة فقط";
+        if (error.message.includes("cannot_change_owner"))
+          return "لا يمكن تغيير دور مالك المجموعة";
+        return "تعذّر تغيير الصلاحية";
+      }
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
+  const removeConversationMember = useCallback<Ctx["removeConversationMember"]>(
+    async (conversationId, userId) => {
+      const { error } = await supabase.rpc("remove_conversation_member", {
+        _conversation_id: conversationId,
+        _user_id: userId,
+      });
+      if (error) {
+        if (error.message.includes("cannot_remove_owner"))
+          return "لا يمكن إخراج مالك المجموعة";
+        if (error.message.includes("owner_cannot_leave"))
+          return "أنت مالك المجموعة، احذفها أو انقل الملكية";
+        if (error.message.includes("forbidden")) return "هذه العملية للمالك أو المشرفين";
+        return "تعذّرت العملية";
+      }
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
+  const leaveConversation = useCallback<Ctx["leaveConversation"]>(
+    async (conversationId) => {
+      const me = currentUserRef.current;
+      if (!me) return "الجلسة منتهية";
+      return removeConversationMember(conversationId, me);
+    },
+    [removeConversationMember],
+  );
+
+  const deleteConversation = useCallback<Ctx["deleteConversation"]>(
+    async (conversationId) => {
+      const { error } = await supabase.rpc("delete_conversation", {
+        _conversation_id: conversationId,
+      });
+      if (error) {
+        if (error.message.includes("forbidden"))
+          return "الحذف النهائي لمالك المجموعة فقط";
+        return "تعذّر حذف المحادثة";
+      }
+      setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+      setMessages((prev) => prev.filter((m) => m.conversationId !== conversationId));
+      await refresh();
+      return null;
+    },
+    [refresh],
+  );
+
+
 
   const forwardMessage = useCallback<Ctx["forwardMessage"]>(
     async (messageId, targetConversationId) => {
@@ -1169,6 +1329,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       startDirectByEmail,
       createGroup,
       updateGroupMembers,
+      updateGroup,
+      setConversationRole,
+      removeConversationMember,
+      leaveConversation,
+      deleteConversation,
+
       forwardMessage,
       sendMessage,
       revokeMessage,
@@ -1208,6 +1374,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       startDirectByEmail,
       createGroup,
       updateGroupMembers,
+      updateGroup,
+      setConversationRole,
+      removeConversationMember,
+      leaveConversation,
+      deleteConversation,
+
       forwardMessage,
       sendMessage,
       revokeMessage,

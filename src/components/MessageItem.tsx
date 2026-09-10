@@ -9,7 +9,9 @@ import {
   Image as ImageIcon,
   Mic,
   MoreHorizontal,
+  Pin,
   Play,
+
   Timer,
   Trash2,
 } from "lucide-react";
@@ -40,12 +42,18 @@ export function MessageItem({
   showSender,
   onOpen,
   onForward,
+  onPin,
+  pinned,
 }: {
   message: Message;
   showSender: boolean;
   onOpen: (m: Message) => void;
   onForward?: ((m: Message) => void) | undefined;
+  /** Provided to group owners/moderators to pin or unpin this message. */
+  onPin?: ((m: Message) => void) | undefined;
+  pinned?: boolean | undefined;
 }) {
+
   const { currentUserId, userById, revokeMessage, log } = useApp();
   const mine = message.senderId === currentUserId;
   const sender = userById(message.senderId);
@@ -218,7 +226,7 @@ export function MessageItem({
           </div>
         </div>
 
-        {(mine || (message.policy.allowForward && onForward)) && (
+        {(mine || onPin || (message.policy.allowForward && onForward)) && (
           <div
             className={cn(
               "mt-1 flex",
@@ -246,6 +254,12 @@ export function MessageItem({
                     <ImageIcon className="size-4" /> فتح المرفق
                   </DropdownMenuItem>
                 )}
+                {onPin && (
+                  <DropdownMenuItem onSelect={() => onPin(message)}>
+                    <Pin className="size-4" /> {pinned ? "إلغاء التثبيت" : "تثبيت الرسالة"}
+                  </DropdownMenuItem>
+                )}
+
                 {mine && (
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive" onSelect={() => revokeMessage(message.id)}
