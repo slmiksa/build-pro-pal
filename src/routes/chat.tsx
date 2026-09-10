@@ -574,7 +574,22 @@ function ChatPage() {
                     showSender={active.kind === "group" || thread[i - 1]?.senderId !== m.senderId}
                     onOpen={openAttachment}
                     onForward={(msg) => setForwarding(msg)}
+                    pinned={active.pinnedMessageId === m.id}
+                    onPin={
+                      canManage
+                        ? (msg) =>
+                            void run(
+                              () =>
+                                updateGroup(active.id, {
+                                  pinnedMessageId:
+                                    active.pinnedMessageId === msg.id ? null : msg.id,
+                                }),
+                              active.pinnedMessageId === msg.id ? "أُلغي التثبيت" : "تم التثبيت",
+                            )
+                        : undefined
+                    }
                   />
+
                 </div>
               ))}
               <div ref={endRef} />
