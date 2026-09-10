@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { PolicyBadges } from "@/components/PolicyBadges";
-import { countdown, formatTime, initials } from "@/lib/format";
+import { countdown, formatTime } from "@/lib/format";
 import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";

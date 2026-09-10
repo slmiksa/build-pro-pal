@@ -3,7 +3,7 @@ import { useEffect, type ReactNode } from "react";
 import { LogOut, MessagesSquare, ScrollText, Users } from "lucide-react";
 import { NotificationsBanner } from "@/components/NotificationsPrompt";
 import { useAppHeight } from "@/hooks/use-app-height";
-import { initials } from "@/lib/format";
+
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { UserAvatar } from "@/components/UserAvatar";

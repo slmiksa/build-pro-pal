@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { COMPANY_NAME } from "@/data/seed";
-import { formatTime, initials, relative } from "@/lib/format";
+import { formatTime, relative } from "@/lib/format";
 import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { isExpired, useApp } from "@/store/app";
