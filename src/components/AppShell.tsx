@@ -72,14 +72,14 @@ export function AppShell({
 
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {header ?? (
-          <header className="pt-safe shrink-0 border-b border-border bg-surface px-5 pt-3 pb-3 lg:px-8 lg:py-4">
+          <header className="pt-safe shrink-0 border-b border-border bg-surface px-4 pt-2.5 pb-2.5 lg:px-6 lg:py-3">
             <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="font-display truncate text-[22px] leading-tight font-semibold tracking-[-0.01em]">
+                <h1 className="font-display truncate text-[17px] leading-tight font-semibold tracking-[-0.01em]">
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
                     {subtitle}
                   </p>
                 )}
