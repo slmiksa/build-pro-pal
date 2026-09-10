@@ -121,7 +121,7 @@
     color-scheme: light;
     -webkit-tap-highlight-color: transparent;
     height: 100%;
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
   body {
@@ -130,13 +130,11 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
-    /* Native-app behaviour: the document itself never scrolls, so the frame
-       stays put when the keyboard opens. */
-    position: fixed;
-    inset: 0;
+    position: static;
     width: 100%;
-    height: 100%;
-    overflow: hidden;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 }
 

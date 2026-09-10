@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Download, Droplets, ScanEye, ShieldCheck, Timer } from "lucide-react";
+import { ArrowRight, Droplets, ScanEye, ShieldCheck, Timer } from "lucide-react";
 import { toast } from "sonner";
-import { InstallAppDialog } from "@/components/InstallApp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,72 +72,76 @@ function LoginPage() {
   };
 
   return (
-    <div className="app-viewport flex justify-center bg-surface-2 lg:items-center lg:py-8">
-      <div className="flex h-full w-full max-w-[430px] flex-col overflow-hidden bg-background lg:h-auto lg:max-h-[calc(100dvh-4rem)] lg:max-w-[520px] lg:rounded-[2rem] lg:shadow-[0_32px_64px_-24px_rgba(14,21,18,0.18)]">
-
-
-        <div className="pt-safe flex flex-1 flex-col overflow-y-auto px-7 pb-7">
-          <div className="flex flex-1 flex-col justify-center py-8">
-            <div className="flex justify-center">
-              <div className="grid size-24 place-items-center rounded-[28px] bg-accent">
-                <img
-                  src="/logo.png"
-                  alt="شعار درع"
-                  width={72}
-                  height={72}
-                  className="size-[72px]"
-                />
-              </div>
+    <main className="min-h-screen bg-background">
+      <div className="mx-auto grid min-h-screen w-full max-w-7xl lg:grid-cols-[minmax(0,1.15fr)_minmax(420px,0.85fr)]">
+        <section className="flex min-h-[46vh] flex-col justify-between bg-surface-2 px-6 py-8 sm:px-10 lg:min-h-screen lg:px-16 lg:py-12">
+          <div className="flex items-center gap-3">
+            <div className="grid size-12 place-items-center rounded-xl bg-accent">
+              <img src="/logo.png" alt="شعار درع" width={38} height={38} className="size-9" />
             </div>
-            <div className="mt-7 text-center">
-              <div className="mb-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-primary">
-                <ShieldCheck className="size-4" />
-                مساحة عمل خاصة
-              </div>
-              <h1 className="font-display text-[38px] font-bold leading-tight">
-                {COMPANY_NAME}
-              </h1>
-              <p className="mt-2 text-[15px] font-medium text-muted-foreground">
-                محادثات الشركة في مكان واحد وآمن
-              </p>
-            </div>
+            <span className="font-display text-xl font-bold">{COMPANY_NAME}</span>
+          </div>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-2">
+          <div className="my-10 max-w-2xl lg:my-16">
+            <div className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+              <ShieldCheck className="size-5" />
+              مساحة عمل خاصة وآمنة
+            </div>
+            <h1 className="font-display text-4xl leading-[1.35] font-bold sm:text-5xl lg:text-6xl">
+              تواصل شركتك، محفوظ داخل درع واحد
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground sm:text-lg">
+              محادثات وملفات وصلاحيات دقيقة ضمن منصة ويب متكاملة تعمل على الكمبيوتر والجوال.
+            </p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
               {highlights.map((h) => (
-                <span
-                  key={h.label}
-                  className="flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-2 text-[11px] font-semibold text-accent-foreground"
-                >
-                  <h.icon className="size-3.5" /> {h.label}
-                </span>
+                <div key={h.label} className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-4">
+                  <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent text-primary">
+                    <h.icon className="size-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-accent-foreground">{h.label}</span>
+                </div>
               ))}
             </div>
           </div>
 
+          <p className="text-xs text-muted-foreground">درع الحماية والأمان لتواصل بلا تسريب</p>
+        </section>
+
+        <section className="flex items-center justify-center px-6 py-10 sm:px-10 lg:px-16">
+          <div className="w-full max-w-md">
+            <div className="mb-8">
+              <div className="mb-5 grid size-20 place-items-center rounded-2xl bg-accent lg:hidden">
+                <img
+                  src="/logo.png"
+                  alt="شعار درع"
+                  width={58}
+                  height={58}
+                  className="size-14"
+                />
+              </div>
+              <h2 className="font-display text-3xl font-bold">
+                {mode === "welcome" ? "مرحبًا بك" : "تسجيل الدخول"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                استخدم حساب العمل للوصول إلى المحادثات والملفات.
+              </p>
+            </div>
+
           {mode === "welcome" ? (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               <Button
-                className="h-14 w-full rounded-2xl text-base font-bold shadow-none"
+                className="h-12 w-full rounded-lg text-base font-bold shadow-none"
                 onClick={() => setMode("signin")}
               >
                 تسجيل الدخول
               </Button>
-              <p className="pt-1 text-center text-xs text-muted-foreground">
+              <p className="pt-2 text-center text-xs text-muted-foreground">
                 الحسابات يُنشئها مسؤول الشركة فقط.
               </p>
-              <InstallAppDialog
-                trigger={
-                  <Button
-                    variant="ghost"
-                    className="h-12 w-full rounded-2xl text-sm font-semibold text-muted-foreground"
-                  >
-                    <Download className="size-4" /> تثبيت التطبيق على الجوال
-                  </Button>
-                }
-              />
             </div>
           ) : (
-            <form onSubmit={submit} className="space-y-4 rounded-3xl bg-surface-2 p-5">
+            <form onSubmit={submit} className="space-y-5">
               <div className="space-y-1.5 text-start">
                 <Label htmlFor="email">البريد الرسمي</Label>
                 <Input
@@ -148,7 +151,7 @@ function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={`name@${COMPANY_DOMAIN}`}
-                  className="h-13 rounded-2xl border-border bg-surface shadow-none"
+                  className="h-12 rounded-lg border-border bg-surface shadow-none"
                 />
               </div>
 
@@ -160,14 +163,14 @@ function LoginPage() {
                   dir="ltr"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-13 rounded-2xl border-border bg-surface shadow-none"
+                  className="h-12 rounded-lg border-border bg-surface shadow-none"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={busy}
-                className="h-14 w-full rounded-2xl text-base font-semibold"
+                className="h-12 w-full rounded-lg text-base font-semibold"
               >
                 دخول آمن
               </Button>
@@ -186,8 +189,9 @@ function LoginPage() {
               </Button>
             </form>
           )}
-        </div>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
