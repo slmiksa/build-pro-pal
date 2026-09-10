@@ -252,28 +252,29 @@ function ChatPage() {
         subtitle={`${COMPANY_NAME} · تواصل داخلي محمي`}
         padded={false}
       >
-        <div className="shrink-0 px-6 pt-4 pb-2">
-          <div className="mb-2 flex items-center gap-2">
+        <div className="mx-auto w-full max-w-3xl shrink-0 px-4 pt-3 pb-2">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="بحث آمن…"
+                className="h-10 rounded-xl border-border bg-surface-2 pe-10 text-[13px] shadow-none focus-visible:border-primary/30"
+              />
+            </div>
             <Button
               onClick={() => setNewOpen(true)}
-              className="h-10 flex-1 gap-2 rounded-2xl"
+              className="h-10 shrink-0 gap-1.5 rounded-xl px-3.5 text-[13px]"
             >
               <Plus className="size-4" />
-              محادثة أو مجموعة جديدة
+              جديدة
             </Button>
-          </div>
-          <div className="relative">
-            <Search className="pointer-events-none absolute end-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="بحث آمن…"
-              className="h-12 rounded-2xl border-transparent bg-surface-2 pe-11 text-sm shadow-none focus-visible:border-primary/30"
-            />
           </div>
         </div>
 
-        <div className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
+        <div className="mx-auto w-full max-w-3xl flex-1 space-y-0.5 overflow-y-auto px-3 pb-4">
+
           {list.length === 0 && (
             <p className="pt-12 text-center text-sm text-muted-foreground">
               {query.trim() ? "لا توجد محادثة بهذا الاسم." : "لا توجد محادثات بعد."}
