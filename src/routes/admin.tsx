@@ -596,6 +596,41 @@ function AdminPage() {
           </Button>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={delTarget !== null}
+        onOpenChange={(o) => {
+          if (!o) setDelTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-right font-display">
+              حذف {delTarget?.name}
+            </DialogTitle>
+            <DialogDescription className="text-right">
+              سيُحذف الحساب نهائياً ولن يستطيع الدخول مرة أخرى. تبقى الرسائل
+              المرسلة داخل المحادثات كما هي.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="secondary"
+              className="rounded-2xl"
+              onClick={() => setDelTarget(null)}
+            >
+              إلغاء
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-2xl"
+              onClick={() => void removeMember()}
+            >
+              حذف نهائي
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
