@@ -130,7 +130,6 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    overscroll-behavior-y: none;
     position: static;
     width: 100%;
     min-height: 100%;

@@ -71,7 +71,7 @@ function LoginPage() {
   };
 
   return (
-    <main className="relative min-h-dvh w-full overflow-y-auto bg-[#f4f7f5] text-slate-900">
+    <main className="relative min-h-dvh w-full bg-[#f4f7f5] text-slate-900">
       {/* خلفية فاتحة حديثة */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -top-40 -start-32 size-[30rem] rounded-full bg-primary/15 blur-[120px]" />
