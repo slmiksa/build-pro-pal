@@ -80,6 +80,7 @@ function ChatPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [forwarding, setForwarding] = useState<Message | null>(null);
+  const [membersOpen, setMembersOpen] = useState(false);
 
   const endRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
