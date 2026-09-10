@@ -65,6 +65,7 @@ export type Database = {
           created_at: string
           last_read_at: string
           pinned: boolean
+          role: Database["public"]["Enums"]["conv_role"]
           user_id: string
         }
         Insert: {
@@ -72,6 +73,7 @@ export type Database = {
           created_at?: string
           last_read_at?: string
           pinned?: boolean
+          role?: Database["public"]["Enums"]["conv_role"]
           user_id: string
         }
         Update: {
@@ -79,6 +81,7 @@ export type Database = {
           created_at?: string
           last_read_at?: string
           pinned?: boolean
+          role?: Database["public"]["Enums"]["conv_role"]
           user_id?: string
         }
         Relationships: [
@@ -93,30 +96,47 @@ export type Database = {
       }
       conversations: {
         Row: {
+          avatar_path: string | null
           created_at: string
           created_by: string
           id: string
           kind: Database["public"]["Enums"]["conversation_kind"]
+          locked: boolean
           name: string | null
+          pinned_message_id: string | null
           updated_at: string
         }
         Insert: {
+          avatar_path?: string | null
           created_at?: string
           created_by: string
           id?: string
           kind?: Database["public"]["Enums"]["conversation_kind"]
+          locked?: boolean
           name?: string | null
+          pinned_message_id?: string | null
           updated_at?: string
         }
         Update: {
+          avatar_path?: string | null
           created_at?: string
           created_by?: string
           id?: string
           kind?: Database["public"]["Enums"]["conversation_kind"]
+          locked?: boolean
           name?: string | null
+          pinned_message_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversations_pinned_message_id_fkey"
+            columns: ["pinned_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invites: {
         Row: {
@@ -383,6 +403,10 @@ export type Database = {
         Returns: boolean
       }
       can_browse_directory: { Args: { _user_id: string }; Returns: boolean }
+      can_manage_conversation: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
       check_invite: {
         Args: { _code: string }
         Returns: {
@@ -392,6 +416,14 @@ export type Database = {
         }[]
       }
       consume_invite: { Args: { _code: string }; Returns: boolean }
+      conv_role_of: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["conv_role"]
+      }
+      delete_conversation: {
+        Args: { _conversation_id: string }
+        Returns: boolean
+      }
       find_profile_by_email: {
         Args: { _email: string }
         Returns: {
@@ -419,6 +451,18 @@ export type Database = {
       }
       ping_keepalive: { Args: never; Returns: undefined }
       register_message_open: { Args: { _message_id: string }; Returns: string }
+      remove_conversation_member: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
+      set_conversation_member_role: {
+        Args: {
+          _conversation_id: string
+          _role: Database["public"]["Enums"]["conv_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       shares_conversation: {
         Args: { _a: string; _b: string }
         Returns: boolean
@@ -426,6 +470,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager"
+      conv_role: "owner" | "moderator" | "member"
       conversation_kind: "direct" | "group"
     }
     CompositeTypes: {
@@ -555,6 +600,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "manager"],
+      conv_role: ["owner", "moderator", "member"],
       conversation_kind: ["direct", "group"],
     },
   },
