@@ -299,6 +299,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_path: string | null
           can_browse_directory: boolean
           color: string
           created_at: string
@@ -312,6 +313,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_path?: string | null
           can_browse_directory?: boolean
           color?: string
           created_at?: string
@@ -325,6 +327,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_path?: string | null
           can_browse_directory?: boolean
           color?: string
           created_at?: string
@@ -374,6 +377,7 @@ export type Database = {
         }
         Returns: string
       }
+      admin_delete_member: { Args: { _user_id: string }; Returns: boolean }
       admin_set_member_password: {
         Args: { _password: string; _user_id: string }
         Returns: boolean
