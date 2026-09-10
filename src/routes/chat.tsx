@@ -251,7 +251,7 @@ function ChatPage() {
   const listPane = (
     <aside
       className={cn(
-        "min-h-0 w-full shrink-0 flex-col border-e border-border bg-surface lg:flex lg:w-[360px] xl:w-[400px]",
+        "min-h-0 w-full shrink-0 flex-col border-e border-border bg-surface md:flex md:w-[300px] xl:w-[340px]",
         active ? "hidden" : "flex",
       )}
     >
@@ -336,7 +336,7 @@ function ChatPage() {
               >
                 <span className="relative shrink-0">
                   <span
-                    className="flex size-12 items-center justify-center rounded-full text-[13px] font-bold text-primary-foreground"
+                    className="flex size-11 items-center justify-center rounded-full text-[12px] font-bold text-primary-foreground"
                     style={{
                       backgroundColor:
                         c.kind === "group" ? "#0ea5a5" : peer?.color,
@@ -418,7 +418,7 @@ function ChatPage() {
     <section
       className={cn(
         "min-h-0 min-w-0 flex-1 flex-col",
-        active ? "flex" : "hidden lg:flex",
+        active ? "flex" : "hidden md:flex",
       )}
     >
       {!active ? (
@@ -443,7 +443,7 @@ function ChatPage() {
               type="button"
               onClick={() => setActiveId(null)}
               aria-label="رجوع"
-              className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-surface-2 lg:hidden"
+              className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-surface-2 md:hidden"
             >
               <ChevronRight className="size-5" />
             </button>
@@ -479,8 +479,9 @@ function ChatPage() {
 
           <div
             ref={scrollRef}
-            className="chat-paper min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 lg:px-10"
+            className="chat-paper min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 md:px-6"
           >
+            <div className="mx-auto w-full max-w-3xl space-y-2">
             {thread.length === 0 && (
               <p className="pt-10 text-center text-sm text-muted-foreground">
                 لا توجد رسائل بعد.
@@ -509,7 +510,9 @@ function ChatPage() {
               </div>
             ))}
             <div ref={endRef} />
+            </div>
           </div>
+
 
           <Composer conversationId={active.id} />
         </>

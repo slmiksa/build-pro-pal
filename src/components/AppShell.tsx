@@ -50,7 +50,7 @@ export function AppShell({
     <div className="flex min-h-screen w-full bg-background">
       <div className="relative flex min-h-screen w-full overflow-hidden bg-background">
         {/* Desktop side navigation */}
-        <aside className="hidden w-56 shrink-0 flex-col gap-0.5 border-e border-border bg-surface p-3 lg:flex">
+        <aside className="hidden w-48 shrink-0 flex-col gap-0.5 border-e border-border bg-surface p-3 md:flex">
           <div className="mb-3 flex items-center gap-2 px-2">
             <img src="/logo.png" alt="شعار درع" width={26} height={26} className="size-[26px]" />
             <span className="font-display text-base font-semibold">درع</span>
@@ -72,7 +72,7 @@ export function AppShell({
 
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {header ?? (
-          <header className="pt-safe shrink-0 border-b border-border bg-surface px-4 pt-2.5 pb-2.5 lg:px-6 lg:py-3">
+          <header className="pt-safe shrink-0 border-b border-border bg-surface px-4 pt-2.5 pb-2.5 md:px-5 md:py-2.5">
             <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="font-display truncate text-[17px] leading-tight font-semibold tracking-[-0.01em]">
@@ -115,7 +115,7 @@ export function AppShell({
           className={cn(
             "min-h-0 flex-1",
             padded
-              ? "w-full overflow-x-hidden overflow-y-auto px-4 pt-3 pb-4 lg:px-6"
+              ? "w-full overflow-x-hidden overflow-y-auto px-4 pt-3 pb-4 md:px-5"
               : "flex w-full flex-col overflow-hidden",
           )}
         >
@@ -123,7 +123,7 @@ export function AppShell({
         </main>
 
         {!hideTabs && (
-          <nav className="pb-safe shrink-0 bg-background px-4 pt-1.5 lg:hidden">
+          <nav className="pb-safe shrink-0 bg-background px-4 pt-1.5 md:hidden">
             <div className="grid grid-cols-3 rounded-[24px] bg-surface-2/90 p-1">
               {tabs.map((t) => (
                 <Link
