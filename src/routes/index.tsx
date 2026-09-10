@@ -73,8 +73,9 @@ function LoginPage() {
   };
 
   return (
-    <div className="app-viewport flex justify-center bg-surface-2 lg:py-8">
-      <div className="flex h-full w-full max-w-[430px] flex-col overflow-hidden bg-background lg:h-[calc(100dvh-4rem)] lg:rounded-[2.75rem] lg:shadow-[0_32px_64px_-24px_rgba(14,21,18,0.18)]">
+    <div className="app-viewport flex justify-center bg-surface-2 lg:items-center lg:py-8">
+      <div className="flex h-full w-full max-w-[430px] flex-col overflow-hidden bg-background lg:h-auto lg:max-h-[calc(100dvh-4rem)] lg:max-w-[520px] lg:rounded-[2rem] lg:shadow-[0_32px_64px_-24px_rgba(14,21,18,0.18)]">
+
 
         <div className="pt-safe flex flex-1 flex-col overflow-y-auto px-7 pb-7">
           <div className="flex flex-1 flex-col justify-center py-8">

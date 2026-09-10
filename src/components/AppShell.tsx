@@ -53,11 +53,33 @@ export function AppShell({
   }
 
   return (
-    <div className="app-viewport flex justify-center bg-surface-2 lg:py-8">
-      <div className="relative flex h-full w-full max-w-[430px] flex-col overflow-hidden bg-background lg:h-[calc(100dvh-4rem)] lg:rounded-[2.75rem] lg:shadow-[0_32px_64px_-24px_rgba(14,21,18,0.18)]">
+    <div className="app-viewport flex justify-center bg-background">
+      <div className="relative flex h-full w-full max-w-[430px] overflow-hidden bg-background lg:max-w-none">
+        {/* Desktop side navigation */}
+        <aside className="hidden w-64 shrink-0 flex-col gap-1 border-e border-border bg-surface-2/40 p-4 lg:flex">
+          <div className="mb-4 flex items-center gap-2 px-2">
+            <img src="/logo.png" alt="شعار درع" width={32} height={32} className="size-8" />
+            <span className="font-display text-lg font-semibold">درع</span>
+          </div>
+          {tabs.map((t) => (
+            <Link
+              key={t.to}
+              to={t.to}
+              className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-background"
+              activeProps={{
+                className: "bg-background text-primary font-semibold shadow-[0_6px_16px_-8px_rgba(14,21,18,0.35)]",
+              }}
+            >
+              <t.icon className="size-5" />
+              {t.label}
+            </Link>
+          ))}
+        </aside>
+
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {header ?? (
-          <header className="pt-safe shrink-0 bg-background px-5 pt-3 pb-2">
-            <div className="flex items-center justify-between gap-3">
+          <header className="pt-safe shrink-0 bg-background px-5 pt-3 pb-2 lg:px-8 lg:pt-6">
+            <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="font-display truncate text-[22px] leading-tight font-semibold tracking-[-0.01em]">
                   {title}
@@ -109,14 +131,16 @@ export function AppShell({
         <main
           className={cn(
             "min-h-0 flex-1",
-            padded ? "overflow-x-hidden overflow-y-auto px-5 pt-3 pb-4" : "flex flex-col overflow-hidden",
+            padded
+              ? "mx-auto w-full max-w-5xl overflow-x-hidden overflow-y-auto px-5 pt-3 pb-4 lg:px-8"
+              : "mx-auto flex w-full max-w-5xl flex-col overflow-hidden",
           )}
         >
           {children}
         </main>
 
         {!hideTabs && (
-          <nav className="pb-safe shrink-0 bg-background px-4 pt-1.5">
+          <nav className="pb-safe shrink-0 bg-background px-4 pt-1.5 lg:hidden">
             <div className="grid grid-cols-3 rounded-[24px] bg-surface-2/90 p-1">
               {tabs.map((t) => (
                 <Link
@@ -135,6 +159,7 @@ export function AppShell({
             </div>
           </nav>
         )}
+        </div>
       </div>
     </div>
   );
