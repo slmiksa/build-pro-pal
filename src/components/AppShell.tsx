@@ -50,21 +50,21 @@ export function AppShell({
     <div className="flex min-h-screen w-full bg-background">
       <div className="relative flex min-h-screen w-full overflow-hidden bg-background">
         {/* Desktop side navigation */}
-        <aside className="hidden w-64 shrink-0 flex-col gap-1 border-e border-border bg-surface p-4 lg:flex xl:w-72">
-          <div className="mb-4 flex items-center gap-2 px-2">
-            <img src="/logo.png" alt="شعار درع" width={32} height={32} className="size-8" />
-            <span className="font-display text-lg font-semibold">درع</span>
+        <aside className="hidden w-56 shrink-0 flex-col gap-0.5 border-e border-border bg-surface p-3 lg:flex">
+          <div className="mb-3 flex items-center gap-2 px-2">
+            <img src="/logo.png" alt="شعار درع" width={26} height={26} className="size-[26px]" />
+            <span className="font-display text-base font-semibold">درع</span>
           </div>
           {tabs.map((t) => (
             <Link
               key={t.to}
               to={t.to}
-              className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-background"
+              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-background"
               activeProps={{
                   className: "bg-accent text-primary font-semibold",
               }}
             >
-              <t.icon className="size-5" />
+              <t.icon className="size-[18px]" />
               {t.label}
             </Link>
           ))}
@@ -72,14 +72,14 @@ export function AppShell({
 
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {header ?? (
-          <header className="pt-safe shrink-0 border-b border-border bg-surface px-5 pt-3 pb-3 lg:px-8 lg:py-4">
+          <header className="pt-safe shrink-0 border-b border-border bg-surface px-4 pt-2.5 pb-2.5 lg:px-6 lg:py-3">
             <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="font-display truncate text-[22px] leading-tight font-semibold tracking-[-0.01em]">
+                <h1 className="font-display truncate text-[17px] leading-tight font-semibold tracking-[-0.01em]">
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
                     {subtitle}
                   </p>
                 )}
@@ -115,7 +115,7 @@ export function AppShell({
           className={cn(
             "min-h-0 flex-1",
             padded
-              ? "w-full overflow-x-hidden overflow-y-auto px-5 pt-3 pb-4 lg:px-8"
+              ? "w-full overflow-x-hidden overflow-y-auto px-4 pt-3 pb-4 lg:px-6"
               : "flex w-full flex-col overflow-hidden",
           )}
         >
