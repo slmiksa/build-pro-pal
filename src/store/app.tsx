@@ -749,46 +749,81 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ? { ...attachment }
         : null;
 
-      if (attachment && file) {
-        const safe = attachment.name.replace(/[^\w.\-]+/g, "_");
-        const path = `${conversationId}/${crypto.randomUUID()}-${safe}`;
-        const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-          contentType: file instanceof File ? file.type : "application/octet-stream",
-          upsert: false,
-        });
-        if (!error) stored = { ...attachment, src: undefined, path };
-      }
+      // Optimistic bubble: show the message instantly, reconcile after insert.
+      const tempId = `tmp-${crypto.randomUUID()}`;
+      const optimistic: Message = {
+        id: tempId,
+        conversationId,
+        senderId: currentUserId,
+        text: text ?? undefined,
+        attachment: attachment ?? undefined,
+        createdAt: Date.now(),
+        expiresAt:
+          policy.expiresInMin > 0
+            ? Date.now() + policy.expiresInMin * 60_000
+            : undefined,
+        revoked: false,
+        policy,
+        readBy: [currentUserId],
+        opens: 0,
+        mentions: mentions ?? [],
+      };
+      setMessages((prev) => [...prev, optimistic]);
 
-      const expiresAt =
-        policy.expiresInMin > 0
-          ? new Date(Date.now() + policy.expiresInMin * 60_000).toISOString()
-          : null;
+      const dropOptimistic = () =>
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
 
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({
-          conversation_id: conversationId,
-          sender_id: currentUserId,
-          text: text ?? null,
-          attachment: (stored ?? null) as never,
-          expires_at: expiresAt,
-          allow_download: policy.allowDownload,
-          allow_copy: policy.allowCopy,
-          allow_forward: policy.allowForward,
-          mentions: mentions ?? [],
-          block_screenshot: policy.blockScreenshot,
-          watermark: policy.watermark,
-          expires_in_min: policy.expiresInMin,
-          max_opens: policy.maxOpens,
-        })
-        .select("id")
-        .single();
-      if (!error && data) {
-        await supabase
+      try {
+        if (attachment && file) {
+          const safe = attachment.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${conversationId}/${crypto.randomUUID()}-${safe}`;
+          const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+            contentType: file instanceof File ? file.type : "application/octet-stream",
+            upsert: false,
+          });
+          if (!error) stored = { ...attachment, src: undefined, path };
+        }
+
+        const expiresAt =
+          policy.expiresInMin > 0
+            ? new Date(Date.now() + policy.expiresInMin * 60_000).toISOString()
+            : null;
+
+        const { data, error } = await supabase
+          .from("messages")
+          .insert({
+            conversation_id: conversationId,
+            sender_id: currentUserId,
+            text: text ?? null,
+            attachment: (stored ?? null) as never,
+            expires_at: expiresAt,
+            allow_download: policy.allowDownload,
+            allow_copy: policy.allowCopy,
+            allow_forward: policy.allowForward,
+            mentions: mentions ?? [],
+            block_screenshot: policy.blockScreenshot,
+            watermark: policy.watermark,
+            expires_in_min: policy.expiresInMin,
+            max_opens: policy.maxOpens,
+          })
+          .select("id")
+          .single();
+        if (error || !data) {
+          dropOptimistic();
+          throw error ?? new Error("insert failed");
+        }
+        // Swap the temp id for the real one so the bubble never blinks.
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...m, id: data.id } : m)),
+        );
+        void supabase
           .from("message_reads")
           .insert({ message_id: data.id, user_id: currentUserId });
+        void refresh();
+      } catch (e) {
+        dropOptimistic();
+        throw e;
       }
-      await refresh();
     },
     [currentUserId, refresh],
   );
