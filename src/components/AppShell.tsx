@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { Download, LogOut, MessagesSquare, ScrollText, Users } from "lucide-react";
-import { InstallAppDialog } from "@/components/InstallApp";
+import { LogOut, MessagesSquare, ScrollText, Users } from "lucide-react";
 import { NotificationsBanner } from "@/components/NotificationsPrompt";
 import { useAppHeight } from "@/hooks/use-app-height";
 import { initials } from "@/lib/format";
@@ -14,11 +13,6 @@ const tabs = [
   { to: "/audit", label: "السجل", icon: ScrollText },
 ] as const;
 
-/**
- * Phone-shaped shell, iOS-minimal: no colored bar — the header shares the page
- * background, uses a large title and circular soft-tinted icon buttons, and the
- * tab bar floats above the safe area.
- */
 export function AppShell({
   children,
   title,
@@ -53,10 +47,10 @@ export function AppShell({
   }
 
   return (
-    <div className="app-viewport flex justify-center bg-background">
-      <div className="relative flex h-full w-full max-w-[430px] overflow-hidden bg-background lg:max-w-none">
+    <div className="flex min-h-screen w-full bg-background">
+      <div className="relative flex min-h-screen w-full overflow-hidden bg-background">
         {/* Desktop side navigation */}
-        <aside className="hidden w-64 shrink-0 flex-col gap-1 border-e border-border bg-surface-2/40 p-4 lg:flex">
+        <aside className="hidden w-64 shrink-0 flex-col gap-1 border-e border-border bg-surface p-4 lg:flex xl:w-72">
           <div className="mb-4 flex items-center gap-2 px-2">
             <img src="/logo.png" alt="شعار درع" width={32} height={32} className="size-8" />
             <span className="font-display text-lg font-semibold">درع</span>
@@ -67,7 +61,7 @@ export function AppShell({
               to={t.to}
               className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-background"
               activeProps={{
-                className: "bg-background text-primary font-semibold shadow-[0_6px_16px_-8px_rgba(14,21,18,0.35)]",
+                  className: "bg-accent text-primary font-semibold",
               }}
             >
               <t.icon className="size-5" />
@@ -78,7 +72,7 @@ export function AppShell({
 
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {header ?? (
-          <header className="pt-safe shrink-0 bg-background px-5 pt-3 pb-2 lg:px-8 lg:pt-6">
+          <header className="pt-safe shrink-0 border-b border-border bg-surface px-5 pt-3 pb-3 lg:px-8 lg:py-4">
             <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="font-display truncate text-[22px] leading-tight font-semibold tracking-[-0.01em]">
@@ -91,18 +85,7 @@ export function AppShell({
                 )}
               </div>
               {showProfile && (
-                <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-surface-2/80 p-1">
-                  <InstallAppDialog
-                    trigger={
-                      <button
-                        type="button"
-                        aria-label="تثبيت التطبيق"
-                        className="grid size-8 place-items-center rounded-full text-muted-foreground transition-all hover:bg-background hover:text-foreground active:scale-95"
-                      >
-                        <Download className="size-[17px]" />
-                      </button>
-                    }
-                  />
+                <div className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background p-1">
                   <span
                     className="flex size-8 items-center justify-center rounded-full text-[11px] font-bold text-primary-foreground"
                     style={{ backgroundColor: currentUser.color }}
@@ -132,8 +115,8 @@ export function AppShell({
           className={cn(
             "min-h-0 flex-1",
             padded
-              ? "mx-auto w-full max-w-5xl overflow-x-hidden overflow-y-auto px-5 pt-3 pb-4 lg:px-8"
-              : "mx-auto flex w-full max-w-5xl flex-col overflow-hidden",
+              ? "w-full overflow-x-hidden overflow-y-auto px-5 pt-3 pb-4 lg:px-8"
+              : "flex w-full flex-col overflow-hidden",
           )}
         >
           {children}
