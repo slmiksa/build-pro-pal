@@ -224,7 +224,7 @@ export function MessageItem({
           </div>
         </div>
 
-        {(mine || (message.policy.allowForward && onForward)) && (
+        {(mine || onPin || (message.policy.allowForward && onForward)) && (
           <div
             className={cn(
               "mt-1 flex",
