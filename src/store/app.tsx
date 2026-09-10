@@ -85,10 +85,31 @@ type Ctx = {
     conversationId: string,
     memberIds: UserId[],
   ) => Promise<string | null>;
+  updateGroup: (
+    conversationId: string,
+    patch: {
+      name?: string | undefined;
+      locked?: boolean | undefined;
+      pinnedMessageId?: string | null | undefined;
+      avatar?: File | Blob | undefined;
+    },
+  ) => Promise<string | null>;
+  setConversationRole: (
+    conversationId: string,
+    userId: UserId,
+    role: "moderator" | "member",
+  ) => Promise<string | null>;
+  removeConversationMember: (
+    conversationId: string,
+    userId: UserId,
+  ) => Promise<string | null>;
+  leaveConversation: (conversationId: string) => Promise<string | null>;
+  deleteConversation: (conversationId: string) => Promise<string | null>;
   forwardMessage: (
     messageId: string,
     targetConversationId: string,
   ) => Promise<string | null>;
+
   sendMessage: (input: {
     conversationId: string;
     text?: string | undefined;
