@@ -400,7 +400,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       setMessages(mapped);
 
-      const allConversations = (convRes.data ?? []).map((c) => {
+      const convRows = (convRes.data ?? []) as Array<
+        Record<string, unknown> & { id: string; kind: "direct" | "group" }
+      >;
+      const groupAvatarPaths = convRows
+        .map((c) => (typeof c['avatar_path'] === "string" ? (c['avatar_path'] as string) : ""))
+        .filter(Boolean);
+      const groupAvatarUrls = new Map<string, string>();
+      if (groupAvatarPaths.length) {
+        const { data: signedGroups } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .createSignedUrls(groupAvatarPaths, 3600);
+        for (const s of signedGroups ?? []) {
+          if (s.path && s.signedUrl) groupAvatarUrls.set(s.path, s.signedUrl);
+        }
+      }
+
+      const allConversations = convRows.map((c) => {
         const lastRead = lastReadFor.get(c.id) ?? 0;
         const unread = mapped.filter(
           (m) =>
@@ -408,15 +424,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
             m.senderId !== me &&
             m.createdAt > lastRead,
         ).length;
+        const roles = rolesByConv.get(c.id) ?? {};
+        const avatarPath =
+          typeof c['avatar_path'] === "string" && c['avatar_path']
+            ? (c['avatar_path'] as string)
+            : undefined;
         return {
           id: c.id,
           kind: c.kind,
-          name: c.name ?? undefined,
+          name: (c['name'] as string | null) ?? undefined,
           memberIds: membersByConv.get(c.id) ?? [],
           unread,
           pinned: pinnedFor.has(c.id),
+          createdBy: c['created_by'] as string,
+          avatarPath,
+          avatarUrl: avatarPath ? groupAvatarUrls.get(avatarPath) : undefined,
+          locked: Boolean(c['locked']),
+          pinnedMessageId: (c['pinned_message_id'] as string | null) ?? undefined,
+          roles,
+          myRole: (roles[me] ?? "member") as ConvRole,
         };
       });
+
 
       // Collapse duplicate one-to-one chats with the same person into the
       // conversation that actually holds the history.
