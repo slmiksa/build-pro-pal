@@ -425,28 +425,37 @@ function ChatPage() {
             >
               <ChevronRight className="size-5" />
             </button>
-            <span
-              className="flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-primary-foreground"
-              style={{
-                backgroundColor: active.kind === "group" ? "#0ea5a5" : other?.color,
-              }}
+            <button
+              type="button"
+              onClick={() => setMembersOpen(true)}
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 text-start transition-colors hover:bg-surface-2"
+              aria-label="عرض أعضاء المحادثة"
             >
-              {active.kind === "group" ? (
-                <Users2 className="size-5" />
-              ) : (
-                initials(other?.name ?? "؟")
-              )}
-            </span>
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-[15px] font-semibold">{conversationTitle(active)}</h1>
-              <p className="truncate text-[11px] text-muted-foreground">
-                {active.kind === "group"
-                  ? `${active.memberIds.length} أعضاء`
-                  : other?.online
-                    ? "متصل الآن"
-                    : (other?.title ?? "")}
-              </p>
-            </div>
+              <span
+                className="flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-primary-foreground"
+                style={{
+                  backgroundColor: active.kind === "group" ? "#0ea5a5" : other?.color,
+                }}
+              >
+                {active.kind === "group" ? (
+                  <Users2 className="size-5" />
+                ) : (
+                  initials(other?.name ?? "؟")
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-semibold">
+                  {conversationTitle(active)}
+                </span>
+                <span className="block truncate text-[11px] text-muted-foreground">
+                  {active.kind === "group"
+                    ? `${active.memberIds.length} أعضاء · اضغط لعرضهم`
+                    : other?.online
+                      ? "متصل الآن"
+                      : (other?.title ?? "")}
+                </span>
+              </span>
+            </button>
             <span className="grid size-9 shrink-0 place-items-center rounded-full text-primary">
               <ShieldCheck className="size-[18px]" />
             </span>
