@@ -9,7 +9,9 @@ import {
   Image as ImageIcon,
   Mic,
   MoreHorizontal,
+  Pin,
   Play,
+
   Timer,
   Trash2,
 } from "lucide-react";
