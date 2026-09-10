@@ -12,11 +12,12 @@ import {
   Timer,
   Users2,
   UserPlus,
+  Paperclip,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { formatDateTime, initials } from "@/lib/format";
-import type { AuditType } from "@/lib/types";
+import type { AuditEvent, AuditType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 
@@ -59,136 +60,283 @@ const meta: Record<
 
 const filters: { key: "all" | AuditType; label: string }[] = [
   { key: "all", label: "الكل" },
-  { key: "screenshot_attempt", label: "محاولات الالتقاط" },
   { key: "file_open", label: "فتح الملفات" },
   { key: "download_blocked", label: "تحميل مرفوض" },
+  { key: "message_forwarded", label: "إعادة توجيه" },
+  { key: "screenshot_attempt", label: "محاولات الالتقاط" },
   { key: "message_revoked", label: "سحب الرسائل" },
 ];
 
+const toneText = (tone: "danger" | "warn" | "info") =>
+  tone === "danger"
+    ? "text-destructive"
+    : tone === "warn"
+      ? "text-warning"
+      : "text-primary";
+
+const toneBg = (tone: "danger" | "warn" | "info") =>
+  tone === "danger"
+    ? "bg-destructive/12 text-destructive"
+    : tone === "warn"
+      ? "bg-warning/12 text-warning"
+      : "bg-primary/12 text-primary";
+
 function AuditPage() {
-  const { audit, userById } = useApp();
+  const { audit, messages, currentUserId, userById } = useApp();
+  const [tab, setTab] = useState<"mine" | "files">("files");
   const [filter, setFilter] = useState<"all" | AuditType>("all");
 
-  const rows = useMemo(
-    () => (filter === "all" ? audit : audit.filter((e) => e.type === filter)),
-    [audit, filter],
+  /* Events caused by me */
+  const myActivity = useMemo(
+    () => audit.filter((e) => e.actorId === currentUserId),
+    [audit, currentUserId],
   );
 
-  const stats = useMemo(
-    () => [
+  /* My own files (messages with attachments that I sent) + every event on them */
+  const myFiles = useMemo(() => {
+    const mine = messages.filter(
+      (m) => m.senderId === currentUserId && m.attachment,
+    );
+    const byMessage = new Map<string, AuditEvent[]>();
+    for (const e of audit) {
+      if (!e.messageId) continue;
+      const arr = byMessage.get(e.messageId);
+      if (arr) arr.push(e);
+      else byMessage.set(e.messageId, [e]);
+    }
+    return mine
+      .map((m) => {
+        const events = (byMessage.get(m.id) ?? []).sort((a, b) => b.at - a.at);
+        return {
+          message: m,
+          events,
+          opens: events.filter((e) => e.type === "file_open").length,
+          blocked: events.filter(
+            (e) => e.type === "download_blocked" || e.type === "copy_blocked",
+          ).length,
+          shots: events.filter((e) => e.type === "screenshot_attempt").length,
+          viewers: new Set(
+            events.filter((e) => e.type === "file_open").map((e) => e.actorId),
+          ).size,
+          last: events[0]?.at ?? m.createdAt,
+        };
+      })
+      .sort((a, b) => b.last - a.last);
+  }, [messages, audit, currentUserId]);
+
+  const rows = useMemo(
+    () =>
+      filter === "all"
+        ? myActivity
+        : myActivity.filter((e) => e.type === filter),
+    [myActivity, filter],
+  );
+
+  const stats = useMemo(() => {
+    const all = myFiles.flatMap((f) => f.events);
+    return [
+      { label: "ملفاتي المُرسلة", value: myFiles.length, tone: "info" as const },
       {
-        label: "محاولات التقاط الشاشة",
-        value: audit.filter((e) => e.type === "screenshot_attempt").length,
-        tone: "danger" as const,
-      },
-      {
-        label: "تحميلات مرفوضة",
-        value: audit.filter((e) => e.type === "download_blocked").length,
-        tone: "warn" as const,
-      },
-      {
-        label: "مرات فتح الملفات",
-        value: audit.filter((e) => e.type === "file_open").length,
+        label: "مرات فتح ملفاتي",
+        value: all.filter((e) => e.type === "file_open").length,
         tone: "info" as const,
       },
       {
-        label: "رسائل مسحوبة",
-        value: audit.filter((e) => e.type === "message_revoked").length,
+        label: "محاولات تحميل/نسخ مرفوضة",
+        value: all.filter(
+          (e) => e.type === "download_blocked" || e.type === "copy_blocked",
+        ).length,
         tone: "warn" as const,
       },
-    ],
-    [audit],
-  );
+      {
+        label: "محاولات التقاط الشاشة",
+        value: all.filter((e) => e.type === "screenshot_attempt").length,
+        tone: "danger" as const,
+      },
+    ];
+  }, [myFiles]);
 
   return (
-    <AppShell title="سجل التدقيق" subtitle="كل محاولة تُنسب لصاحبها">
-      <div className="mx-auto max-w-4xl space-y-5">
-        <p className="text-[13px] font-medium leading-6 text-foreground/75">
-          كل عملية على محتوى محمي تُسجَّل باسم صاحبها ووقتها.
-        </p>
-
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+    <AppShell title="السجل" subtitle="كل محاولة تُنسب لصاحبها">
+      <div className="mx-auto max-w-4xl space-y-3.5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {stats.map((s) => (
             <div
               key={s.label}
-              className="min-h-28 rounded-2xl border border-border bg-surface p-3.5 shadow-sm"
+              className="rounded-xl border border-border bg-surface px-3 py-2.5"
             >
-              <div
-                className={cn(
-                  "text-[27px] font-bold leading-none",
-                  s.tone === "danger" && "text-destructive",
-                  s.tone === "warn" && "text-warning",
-                  s.tone === "info" && "text-primary",
-                )}
-              >
+              <div className={cn("text-xl leading-none font-bold", toneText(s.tone))}>
                 {s.value}
               </div>
-              <div className="mt-3 text-xs font-semibold leading-5 text-foreground/80">
+              <div className="mt-1.5 text-[11px] leading-4 font-medium text-muted-foreground">
                 {s.label}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {filters.map((f) => (
-            <Button
-              key={f.key}
-              size="sm"
-              variant={filter === f.key ? "default" : "outline"}
-              className="shrink-0 rounded-full px-4 font-semibold shadow-none"
-              onClick={() => setFilter(f.key)}
+        <div className="flex gap-1 rounded-xl bg-surface-2 p-1">
+          {(
+            [
+              { key: "files", label: "ملفاتي ومن فتحها" },
+              { key: "mine", label: "نشاطي" },
+            ] as const
+          ).map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "flex-1 rounded-lg py-1.5 text-[12.5px] font-semibold transition-colors",
+                tab === t.key
+                  ? "bg-background text-primary shadow-sm"
+                  : "text-muted-foreground",
+              )}
             >
-              {f.label}
-            </Button>
+              {t.label}
+            </button>
           ))}
         </div>
 
-        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-          {rows.map((e) => {
-            const m = meta[e.type];
-            const actor = userById(e.actorId);
-            return (
-              <li key={e.id} className="flex items-start gap-3.5 px-4 py-4">
-                <span
-                  className={cn(
-                    "flex size-10 shrink-0 items-center justify-center rounded-full",
-                    m.tone === "danger" && "bg-destructive/15 text-destructive",
-                    m.tone === "warn" && "bg-warning/15 text-warning",
-                    m.tone === "info" && "bg-primary/15 text-primary",
-                  )}
-                >
-                  <m.icon className="size-[18px]" strokeWidth={2.25} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-bold text-foreground">
-                    {m.label}
-                  </div>
-                  <p className="mt-1 text-xs font-medium leading-5 text-foreground/70">
-                    {e.detail}
-                  </p>
-                  <div className="mt-2 flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
-                    <span
-                      className="flex size-5 items-center justify-center rounded-full text-[8px] font-bold text-primary-foreground"
-                      style={{ backgroundColor: actor?.color }}
-                      title={actor?.name}
-                    >
-                      {initials(actor?.name ?? "؟")}
+        {tab === "files" ? (
+          <div className="space-y-2">
+            {myFiles.length === 0 && (
+              <p className="rounded-xl border border-border bg-surface px-4 py-8 text-center text-[13px] text-muted-foreground">
+                لم ترسل أي ملف بعد. سجل الفتح والمحاولات يظهر هنا لكل ملف ترسله.
+              </p>
+            )}
+            {myFiles.map((f) => (
+              <details
+                key={f.message.id}
+                className="overflow-hidden rounded-xl border border-border bg-surface"
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-2.5 px-3 py-2.5">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary">
+                    <Paperclip className="size-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-semibold">
+                      {f.message.attachment?.name}
                     </span>
-                    <span>{actor?.name ?? "مستخدم"}</span>
-                    <span aria-hidden="true">•</span>
-                    <time>{formatDateTime(e.at)}</time>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-          {rows.length === 0 && (
-            <li className="px-4 py-10 text-center text-sm text-muted-foreground">
-              لا توجد أحداث بهذا التصنيف.
-            </li>
-          )}
-        </ul>
+                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                      {formatDateTime(f.message.createdAt)}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold">
+                    <span className="rounded-full bg-primary/12 px-2 py-0.5 text-primary">
+                      {f.opens} فتح · {f.viewers} شخص
+                    </span>
+                    {f.blocked > 0 && (
+                      <span className="rounded-full bg-warning/15 px-2 py-0.5 text-warning">
+                        {f.blocked} منع
+                      </span>
+                    )}
+                    {f.shots > 0 && (
+                      <span className="rounded-full bg-destructive/12 px-2 py-0.5 text-destructive">
+                        {f.shots} التقاط
+                      </span>
+                    )}
+                  </span>
+                </summary>
+                <ul className="divide-y divide-border border-t border-border">
+                  {f.events.length === 0 && (
+                    <li className="px-3 py-4 text-center text-[12px] text-muted-foreground">
+                      لم يفتح أحد هذا الملف بعد.
+                    </li>
+                  )}
+                  {f.events.map((e) => {
+                    const m = meta[e.type];
+                    const actor = userById(e.actorId);
+                    return (
+                      <li
+                        key={e.id}
+                        className="flex items-center gap-2.5 px-3 py-2"
+                      >
+                        <span
+                          className={cn(
+                            "grid size-7 shrink-0 place-items-center rounded-full",
+                            toneBg(m.tone),
+                          )}
+                        >
+                          <m.icon className="size-3.5" strokeWidth={2.25} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[12.5px] font-semibold">
+                            {m.label} — {actor?.name ?? "مستخدم"}
+                          </span>
+                          <span className="block truncate text-[11px] text-muted-foreground">
+                            {e.detail}
+                          </span>
+                        </span>
+                        <time className="shrink-0 text-[10.5px] text-muted-foreground">
+                          {formatDateTime(e.at)}
+                        </time>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {filters.map((f) => (
+                <Button
+                  key={f.key}
+                  size="sm"
+                  variant={filter === f.key ? "default" : "outline"}
+                  className="h-7 shrink-0 rounded-full px-3 text-[12px] font-semibold shadow-none"
+                  onClick={() => setFilter(f.key)}
+                >
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+              {rows.map((e) => {
+                const m = meta[e.type];
+                const actor = userById(e.actorId);
+                return (
+                  <li key={e.id} className="flex items-center gap-2.5 px-3 py-2.5">
+                    <span
+                      className={cn(
+                        "grid size-8 shrink-0 place-items-center rounded-full",
+                        toneBg(m.tone),
+                      )}
+                    >
+                      <m.icon className="size-4" strokeWidth={2.25} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] font-semibold">
+                        {m.label}
+                      </div>
+                      <p className="truncate text-[11.5px] text-muted-foreground">
+                        {e.detail}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5 text-[10.5px] text-muted-foreground">
+                      <span
+                        className="grid size-5 place-items-center rounded-full text-[8px] font-bold text-primary-foreground"
+                        style={{ backgroundColor: actor?.color }}
+                        title={actor?.name}
+                      >
+                        {initials(actor?.name ?? "؟")}
+                      </span>
+                      <time>{formatDateTime(e.at)}</time>
+                    </div>
+                  </li>
+                );
+              })}
+              {rows.length === 0 && (
+                <li className="px-4 py-8 text-center text-[13px] text-muted-foreground">
+                  لا توجد أحداث بهذا التصنيف.
+                </li>
+              )}
+            </ul>
+          </>
+        )}
       </div>
     </AppShell>
   );
