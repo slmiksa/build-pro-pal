@@ -32,9 +32,7 @@ for (const candidate of staticOutputCandidates) {
 }
 
 if (!staticOutput) {
-  throw new Error(
-    "لم يتم العثور على index.html في ناتج الموقع (.output/public أو dist/client).",
-  );
+  throw new Error("لم يتم العثور على index.html في ناتج الموقع (.output/public أو dist/client).");
 }
 
 await rm(staged, { recursive: true, force: true });
