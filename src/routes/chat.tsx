@@ -325,22 +325,22 @@ function ChatPage() {
               <div
                 key={c.id}
                 className={cn(
-                  "flex w-full items-center gap-1 rounded-[26px] pe-1 transition-all",
+                  "flex w-full items-center gap-1 rounded-xl pe-1 transition-all hover:bg-surface-2/60",
                   c.unread > 0 ? "bg-surface-2/70" : "",
                 )}
               >
               <button
                 onClick={() => setActiveId(c.id)}
-                className="flex min-w-0 flex-1 items-center gap-3.5 rounded-[26px] px-3 py-3 text-start transition-all active:scale-[0.99] active:bg-surface-2/60"
+                className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2.5 py-2 text-start transition-all active:scale-[0.99]"
               >
                 <span className="relative shrink-0">
                   <span
-                    className="flex size-13 items-center justify-center rounded-2xl text-sm font-bold text-primary-foreground"
+                    className="flex items-center justify-center rounded-xl text-[12px] font-bold text-primary-foreground"
                     style={{
                       backgroundColor:
                         c.kind === "group" ? "#0ea5a5" : other?.color,
-                      width: 52,
-                      height: 52,
+                      width: 40,
+                      height: 40,
                     }}
                   >
                     {c.kind === "group" ? (
