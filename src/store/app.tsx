@@ -9,6 +9,7 @@ import {
   type ReactNode,
   type Context,
 } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { showMessageNotification } from "@/lib/notifications";
 import type {
