@@ -3,11 +3,7 @@ import { Mic, Paperclip, Send, ShieldCheck, Smile, Square, X } from "lucide-reac
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PolicyPanel } from "@/components/PolicyPanel";
 import { policyItems } from "@/components/PolicyBadges";
 import { defaultPolicy, type Attachment, type Policy, type User } from "@/lib/types";
@@ -23,11 +19,86 @@ function guessKind(name: string): Attachment["kind"] {
 }
 
 const EMOJIS = [
-  "😀","😃","😄","😁","😆","😅","🤣","😂","🙂","😉","😊","😇","🥰","😍","😘","😗",
-  "🤗","🤩","🤔","🤨","😐","😴","🥲","😢","😭","😤","😠","🤯","😳","🥵","🤝","🙏",
-  "👍","👎","👌","✌️","🤞","💪","👏","🙌","☝️","👋","🫡","🤲","❤️","🧡","💚","💙",
-  "💜","🖤","🤍","💯","🔥","✨","⭐","🎉","🎊","✅","❌","⚠️","🔒","🔐","🛡️","🕵️",
-  "📎","📄","📁","📊","📷","🎙️","⏱️","⏳","📌","💡","🚀","🏆","☕","🌙","☀️","🌟",
+  "😀",
+  "😃",
+  "😄",
+  "😁",
+  "😆",
+  "😅",
+  "🤣",
+  "😂",
+  "🙂",
+  "😉",
+  "😊",
+  "😇",
+  "🥰",
+  "😍",
+  "😘",
+  "😗",
+  "🤗",
+  "🤩",
+  "🤔",
+  "🤨",
+  "😐",
+  "😴",
+  "🥲",
+  "😢",
+  "😭",
+  "😤",
+  "😠",
+  "🤯",
+  "😳",
+  "🥵",
+  "🤝",
+  "🙏",
+  "👍",
+  "👎",
+  "👌",
+  "✌️",
+  "🤞",
+  "💪",
+  "👏",
+  "🙌",
+  "☝️",
+  "👋",
+  "🫡",
+  "🤲",
+  "❤️",
+  "🧡",
+  "💚",
+  "💙",
+  "💜",
+  "🖤",
+  "🤍",
+  "💯",
+  "🔥",
+  "✨",
+  "⭐",
+  "🎉",
+  "🎊",
+  "✅",
+  "❌",
+  "⚠️",
+  "🔒",
+  "🔐",
+  "🛡️",
+  "🕵️",
+  "📎",
+  "📄",
+  "📁",
+  "📊",
+  "📷",
+  "🎙️",
+  "⏱️",
+  "⏳",
+  "📌",
+  "💡",
+  "🚀",
+  "🏆",
+  "☕",
+  "🌙",
+  "☀️",
+  "🌟",
 ] as const;
 
 export function Composer({ conversationId }: { conversationId: string }) {
@@ -59,12 +130,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
     if (mentionQuery === null || !isGroup) return [];
     const q = mentionQuery.trim().toLowerCase();
     return members
-      .filter(
-        (u) =>
-          !q ||
-          u.name.toLowerCase().includes(q) ||
-          u.email.toLowerCase().includes(q),
-      )
+      .filter((u) => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
       .slice(0, 6);
   }, [mentionQuery, members, isGroup]);
 
@@ -85,8 +151,9 @@ export function Composer({ conversationId }: { conversationId: string }) {
     const caret = el?.selectionStart ?? text.length;
     const before = text.slice(0, caret);
     const after = text.slice(caret);
-    const replaced = before.replace(/(?:^|\s)@([^\s@]{0,30})$/, (whole) =>
-      `${whole.startsWith("@") ? "" : whole[0]}@${user.name} `,
+    const replaced = before.replace(
+      /(?:^|\s)@([^\s@]{0,30})$/,
+      (whole) => `${whole.startsWith("@") ? "" : whole[0]}@${user.name} `,
     );
     setText(replaced + after);
     setMentionQuery(null);
@@ -136,7 +203,6 @@ export function Composer({ conversationId }: { conversationId: string }) {
     });
   };
 
-
   const toggleRecording = async () => {
     if (recording) {
       recRef.current?.stop();
@@ -157,10 +223,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
           name: "ملاحظة صوتية.webm",
           mime: "audio/webm",
           size: `${Math.max(1, Math.round(blob.size / 1024))} ك.ب`,
-          durationSec: Math.max(
-            1,
-            Math.round((Date.now() - startedAt.current) / 1000),
-          ),
+          durationSec: Math.max(1, Math.round((Date.now() - startedAt.current) / 1000)),
         });
         setRecording(false);
       };
@@ -202,9 +265,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{u.name}</span>
-                <span className="block truncate text-[10px] text-muted-foreground">
-                  {u.title}
-                </span>
+                <span className="block truncate text-[10px] text-muted-foreground">{u.title}</span>
               </span>
             </button>
           ))}
@@ -341,15 +402,10 @@ export function Composer({ conversationId }: { conversationId: string }) {
             onClick={toggleRecording}
             aria-label="تسجيل صوتي"
           >
-            {recording ? (
-              <Square className="size-[18px]" />
-            ) : (
-              <Mic className="size-[18px]" />
-            )}
+            {recording ? <Square className="size-[18px]" /> : <Mic className="size-[18px]" />}
           </Button>
         )}
       </div>
-
     </div>
   );
 }
