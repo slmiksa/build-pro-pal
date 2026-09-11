@@ -8,8 +8,11 @@ import {
   PinOff,
   Plus,
   Search,
+  Settings2,
   ShieldCheck,
+  Trash2,
   Users2,
+
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
