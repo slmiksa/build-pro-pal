@@ -122,19 +122,21 @@ export function AppShell({
           </main>
 
           {!hideTabs && (
-            <nav className="pb-safe shrink-0 border-t border-border bg-background px-3 pt-1.5 md:hidden">
-              <div className="grid grid-cols-3 rounded-[24px] bg-surface-2/90 p-1">
+            <nav className="pb-safe shrink-0 border-t border-border bg-background md:hidden">
+              <div className="grid grid-cols-3">
                 {tabs.map((t) => (
                   <Link
                     key={t.to}
                     to={t.to}
-                    className="flex flex-col items-center gap-1 rounded-[20px] py-2.5 text-[10.5px] font-medium text-muted-foreground transition-all active:scale-95"
+                    className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors active:scale-95"
                     activeProps={{
                       className:
-                        "bg-background text-primary font-semibold shadow-[0_6px_16px_-8px_rgba(14,21,18,0.35)]",
+                        "text-primary font-semibold",
                     }}
                   >
-                    <t.icon className="size-5" />
+                    <span className="grid place-items-center rounded-xl px-4 py-1 transition-colors [&[data-active]]:bg-surface-2">
+                      <t.icon className="size-[22px]" />
+                    </span>
                     {t.label}
                   </Link>
                 ))}
