@@ -20,9 +20,11 @@ export function useAppHeight() {
         largestHeight = Math.max(largestHeight, layout, vh);
         // The keyboard is open only when the visual viewport shrinks a lot.
         const keyboardOpen = largestHeight - vh > 120;
-        // visualViewport is the reliable visible frame in iOS standalone mode.
-        // Using 100vh there can extend the app underneath browser/system chrome.
-        const h = keyboardOpen ? vh : vv?.height ?? layout;
+        // Use the full layout height when the keyboard is closed so the app
+        // frame extends behind the iPhone home-indicator area (viewport-fit=cover).
+        // Use the visual viewport height only while the keyboard is open so the
+        // composer stays above the keys.
+        const h = keyboardOpen ? vh : layout;
         document.documentElement.style.setProperty("--app-h", `${h}px`);
         document.documentElement.style.setProperty(
           "--app-top",
